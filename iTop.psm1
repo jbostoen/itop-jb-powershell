@@ -104,7 +104,7 @@ $Environments | ForEach-Object {
 		}
 		
 		# Make config writable
-		Set-iTopConfigWritable
+		Set-iTopConfigWritable -Environment $Environment
 		
 		# PHP.exe: require statements etc relate to current working directory. 
 		# Need to temporarily change this!
@@ -174,6 +174,10 @@ $Environments | ForEach-Object {
 		
 			$Count = $Count + 1;
 
+			If((Test-Path -Path $EnvSettings.App.ConfigFile) -eq $False) {
+				throw "Configuration file does not exist (yet): $($EnvSettings.App.ConfigFile)"
+			}
+			
 			Get-Item -Path $EnvSettings.App.ConfigFile | Set-ItemProperty -Name IsReadOnly -Value $False
 			Write-Host "Set write permissions on iTop configuration file ($($EnvSettings.App.ConfigFile)) (#$($Count))"
 			
@@ -681,48 +685,37 @@ $Environments | ForEach-Object {
 
 		$Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache"} -Credential $Credential
 
-
- 
-        try {
-         
-			
-			    # iTop API did not return an error
-			    If($Content.code -eq 0) {
-			
-				    [Array]$Objects = @()
+	
+		# iTop API did not return an error
+		If($Content.code -eq 0) {
+	
+			[Array]$Objects = @()
+		
+			if($Content.objects -ne $Null) {
+				$Content.objects | Get-Member -MemberType NoteProperty | ForEach-Object {
+					# Gets the properties for each object
+					$Object = ($Content.objects | Select-Object -ExpandProperty $_.Name)
 				
-				    if($Content.objects -ne $Null) {
-					    $Content.objects | Get-Member -MemberType NoteProperty | ForEach-Object {
-						    # Gets the properties for each object
-						    $Object = ($Content.objects | Select-Object -ExpandProperty $_.Name)
-						
-						    # Cast 'fields' to System.Collections.Hashtable 
-						    $RecastedFields = [System.Collections.Hashtable]@{};
-						
-						    $Object.fields | Get-Member -MemberType NoteProperty | ForEach-Object {
-							    $RecastedFields."$($_.Name)" = $Object.fields."$($_.Name)"
-						    }
-						
-						    $Object.fields = $RecastedFields
-						
-						    $Objects += $Object
-					    }
-				    }
-
-				    return ,$Objects
+					# Cast 'fields' to System.Collections.Hashtable 
+					$RecastedFields = [System.Collections.Hashtable]@{};
 				
-			    }
-			    # iTop API did return an error
-			    else {
-				    throw "iTop API returned an error: $($Content.code) - $($Content.message)"
-			    }
-			
-		    
+					$Object.fields | Get-Member -MemberType NoteProperty | ForEach-Object {
+						$RecastedFields."$($_.Name)" = $Object.fields."$($_.Name)"
+					}
+				
+					$Object.fields = $RecastedFields
+				
+					$Objects += $Object
+				}
+			}
 
-        }
-        catch {
-            throw "Unable to use API. content: `"$($Request)`", settings: $($EnvSettings | ConvertTo-JSON)"
-        }
+			return ,$Objects
+		
+		}
+		# iTop API did return an error
+		else {
+			throw "iTop API returned an error: $($Content.code) - $($Content.message)"
+		}
 		
 	}
 
@@ -793,51 +786,45 @@ $Environments | ForEach-Object {
 			'version'=$EnvSettings.API.Version;
 			'auth_user'=$EnvSettings.API.User;
 			'auth_pwd'=$EnvSettings.API.Password;
-			'json_data'=(ConvertTo-JSON $JsonData)
+			'json_data'=(ConvertTo-JSON $JsonData -Depth 100) # Max depth for serialization is 1024
 		}
 		
 		$SecurePassword = ConvertTo-SecureString $EnvSettings.API.Password -AsPlainText -Force
 		$Credential = New-Object System.Management.Automation.PSCredential($EnvSettings.API.User, $SecurePassword)
 		$Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache"} -Credential $Credential
 
-        try {
+	
+		
+		# iTop API did not return an error
+		If($Content.code -eq 0) {
+		
+			[Array]$Objects = @()
 			
-			# iTop API did not return an error
-			If($Content.code -eq 0) {
-			
-				[Array]$Objects = @()
-				
-				if($Content.objects -ne $Null) {
-					$Content.objects | Get-Member -MemberType NoteProperty | ForEach-Object {
-						# Gets the properties for each object
-						$Object = ($Content.objects | Select-Object -ExpandProperty $_.Name)
-						
-						# Cast 'fields' to System.Collections.Hashtable 
-						$RecastedFields = [System.Collections.Hashtable]@{};
-						
-						$Object.fields | Get-Member -MemberType NoteProperty | ForEach-Object {
-							$RecastedFields."$($_.Name)" = $Object.fields."$($_.Name)"
-						}
-						
-						$Object.fields = $RecastedFields
-						
-						$Objects += $Object
+			if($Content.objects -ne $Null) {
+				$Content.objects | Get-Member -MemberType NoteProperty | ForEach-Object {
+					# Gets the properties for each object
+					$Object = ($Content.objects | Select-Object -ExpandProperty $_.Name)
+					
+					# Cast 'fields' to System.Collections.Hashtable 
+					$RecastedFields = [System.Collections.Hashtable]@{};
+					
+					$Object.fields | Get-Member -MemberType NoteProperty | ForEach-Object {
+						$RecastedFields."$($_.Name)" = $Object.fields."$($_.Name)"
 					}
+					
+					$Object.fields = $RecastedFields
+					
+					$Objects += $Object
 				}
+			}
 
-				return ,$Objects
-				
-			}
-			# iTop API did return an error
-			else {
-				throw "iTop API returned an error: $($Content.code) - $($Content.message)"
-			}
+			return ,$Objects
 			
-
-        }
-        catch {
-            throw "Unexpected error"
-        }
+		}
+		# iTop API did return an error
+		else {
+			throw "iTop API returned an error: $($Content.code) - $($Content.message)"
+		}
 		 
 		
 	}
@@ -925,7 +912,7 @@ $Environments | ForEach-Object {
 		# Batch (must be after "key"/"class" check)
 		if($Batch -eq $True) {
 			
-			$Objects = Get-iTopObject -environment $Environment -key $Key -class $Class
+			$Objects = Get-iTopObject -Environment $Environment -Key $Key -Class $Class
 			$Objects | ForEach-Object {
 				Set-iTopObject -environment $Environment -key "SELECT $($_.Class) WHERE id = $($_.Key)" -fields $Fields -outputFields $OutputFields -comment $Comment
 			}
@@ -954,45 +941,39 @@ $Environments | ForEach-Object {
 		$Credential = New-Object System.Management.Automation.PSCredential($EnvSettings.API.User, $SecurePassword)
 		$Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache"} -Credential $Credential
  
-		try {
 
-			# Valid HTTP response
+		# Valid HTTP response
+		
+		# iTop API did not return an error
+		If($Content.code -eq 0) {
+		
+			[Array]$Objects = @()
 			
-			# iTop API did not return an error
-			If($Content.code -eq 0) {
-			
-				[Array]$Objects = @()
-				
-				if($Content.objects -ne $Null) {
-					$Content.objects | Get-Member -MemberType NoteProperty | ForEach-Object {
-						# Gets the properties for each object
-						$Object = ($Content.objects | Select-Object -ExpandProperty $_.Name)
-						
-						# Cast 'fields' to System.Collections.Hashtable 
-						$RecastedFields = [System.Collections.Hashtable]@{};
-						
-						$Object.fields | Get-Member -MemberType NoteProperty | ForEach-Object {
-							$RecastedFields."$($_.Name)" = $Object.fields."$($_.Name)"
-						}
-						
-						$Object.fields = $RecastedFields
-						
-						$Objects += $Object
+			if($Content.objects -ne $Null) {
+				$Content.objects | Get-Member -MemberType NoteProperty | ForEach-Object {
+					# Gets the properties for each object
+					$Object = ($Content.objects | Select-Object -ExpandProperty $_.Name)
+					
+					# Cast 'fields' to System.Collections.Hashtable 
+					$RecastedFields = [System.Collections.Hashtable]@{};
+					
+					$Object.fields | Get-Member -MemberType NoteProperty | ForEach-Object {
+						$RecastedFields."$($_.Name)" = $Object.fields."$($_.Name)"
 					}
+					
+					$Object.fields = $RecastedFields
+					
+					$Objects += $Object
 				}
+			}
 
-				return ,$Objects
-				
-			}
-			# iTop API did return an error
-			else {
-				throw "iTop API returned an error: $($Content.code) - $($Content.message)"
-			}
+			return ,$Objects
 			
-        }
-        catch {
-            throw "Unexpected error"
-        }
+		}
+		# iTop API did return an error
+		elseif($Content.code -gt 0) {
+			throw "iTop API returned an error: $($Content.code) - $($Content.message)"
+		}
 		 
 		
 	}
@@ -1064,7 +1045,7 @@ $Environments | ForEach-Object {
 		# Batch
 		if($Batch -eq $True) {
 			
-			$Objects = Get-iTopObject -environment $Environment -key $Key -class $Class
+			$Objects = Get-iTopObject -Environment $Environment -Key $Key -Class $Class
 			$Objects | ForEach-Object {
 				Remove-iTopObject -environment $Environment -key "SELECT $($_.Class) WHERE id = $($_.Key)" -comment $Comment
 			}
@@ -1091,43 +1072,38 @@ $Environments | ForEach-Object {
 		$Credential = New-Object System.Management.Automation.PSCredential($EnvSettings.API.User, $SecurePassword)
 		$Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache"} -Credential $Credential
  
-        try {
+	
+		
+		# iTop API did not return an error
+		If($Content.code -eq 0) {
+		
+			[Array]$Objects = @()
 			
-			# iTop API did not return an error
-			If($Content.code -eq 0) {
-			
-				[Array]$Objects = @()
-				
-				if($Content.objects -ne $Null) {
-					$Content.objects | Get-Member -MemberType NoteProperty | ForEach-Object {
-						# Gets the properties for each object
-						$Object = ($Content.objects | Select-Object -ExpandProperty $_.Name)
-						
-						# Cast 'fields' to System.Collections.Hashtable 
-						$RecastedFields = [System.Collections.Hashtable]@{};
-						
-						$Object.fields | Get-Member -MemberType NoteProperty | ForEach-Object {
-							$RecastedFields."$($_.Name)" = $Object.fields."$($_.Name)"
-						}
-						
-						$Object.fields = $RecastedFields
-						
-						$Objects += $Object
+			if($Content.objects -ne $Null) {
+				$Content.objects | Get-Member -MemberType NoteProperty | ForEach-Object {
+					# Gets the properties for each object
+					$Object = ($Content.objects | Select-Object -ExpandProperty $_.Name)
+					
+					# Cast 'fields' to System.Collections.Hashtable 
+					$RecastedFields = [System.Collections.Hashtable]@{};
+					
+					$Object.fields | Get-Member -MemberType NoteProperty | ForEach-Object {
+						$RecastedFields."$($_.Name)" = $Object.fields."$($_.Name)"
 					}
+					
+					$Object.fields = $RecastedFields
+					
+					$Objects += $Object
 				}
+			}
 
-				return ,$Objects
-				
-			}
-			# iTop API did return an error
-			else {
-				throw "iTop API returned an error: $($Content.code) - $($Content.message)"
-			}
-			 
+			return ,$Objects
+			
 		}
-        catch {
-            throw "Unexpected error"
-        }
+		# iTop API did return an error
+		else {
+			throw "iTop API returned an error: $($Content.code) - $($Content.message)"
+		}
 
 	 }
 	
