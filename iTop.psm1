@@ -257,12 +257,15 @@ $Environments | ForEach-Object {
 		
 			$Count = $Count + 1;
 
-			If((Test-Path -Path $EnvSettings.App.ConfigFile) -eq $False) {
-				throw "Configuration file does not exist (yet): $($EnvSettings.App.ConfigFile)"
+			If((Test-Path -Path $EnvSettings.App.ConfigFile) -eq $True) {
+                Get-Item -Path $EnvSettings.App.ConfigFile | Set-ItemProperty -Name IsReadOnly -Value $False
+			    Write-Host "Set write permissions on iTop configuration file ($($EnvSettings.App.ConfigFile)) (#$($Count))"
 			}
+            Else {
+                Write-Host "iTop configuration file not found: ($($EnvSettings.App.ConfigFile)) (#$($Count))"
+            }
 			
-			Get-Item -Path $EnvSettings.App.ConfigFile | Set-ItemProperty -Name IsReadOnly -Value $False
-			Write-Host "Set write permissions on iTop configuration file ($($EnvSettings.App.ConfigFile)) (#$($Count))"
+			
 			
 			If($Loop -eq $true) {
 				Start-Sleep -Seconds 15

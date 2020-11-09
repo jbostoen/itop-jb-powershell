@@ -1,2 +1,2 @@
-environments/*.json
+environments/
 !environments/default.json
