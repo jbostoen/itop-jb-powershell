@@ -28,24 +28,20 @@ The most important limitation is that with each HTTP request, only one object ca
 * `Install-iTopUnattended`: performs an unattended (automatic) (re)installation of iTop.
 * `Get-iTopClass`: gets overview of each class, including parent and module where it's defined or changed
 * `Get-iTopCommand`: shows all iTop commands in this PS1 module.
+* `Get-iTopEnvironment`: set settings of an iTop environment
 * `New-iTopExtension`: creates new extension from template
 * `Remove-iTopLanguage`: removes all unnecessary language files
 * `Rename-iTopExtension`: renames an extension. Renames folder, renames default files, replaces extension name in those files...
 * `Set-iTopConfigWritable`: makes or keeps (every 5 seconds) configuration file writable
+* `Set-iTopEnvironment`: set settings of an iTop environment
 * `Set-iTopExtensionReleaseInfo`: sets iTop extension release info (in "extensions" folder defined in the environment)
 * `Start-iTopCron`: starts iTop cron jobs
-
-Also exposes variable
-* `$global:iTopEnvironments` - contains all the settings needed for the functions above. Loaded during initialization of PowerShell ISE or Console.
-  * Retrieved from JSON files containing configuration (see below). Can be overwritten during session with PowerShell.
-  * Highly advised to import this from an encrypted file rather than from the demo JSON file provided.
-
 
 
 ## Configuration example
 
 "default" is the name of the default environment and should always be included.
-You can add more environments by adding a 'environment-name.json' file in %UserProfile%\Documents\WindowsPowerShell\Modules\iTop\environments
+You can add more environments by adding a 'environment-name.json' file in **%UserProfile%\Documents\WindowsPowerShell\Modules\iTop\environments**
 
 **API settings** are useful in all cases.
 All other settings are primarily when you have iTop installed on the same machine as where you are running the PowerShell module on.
@@ -101,6 +97,11 @@ All other settings are primarily when you have iTop installed on the same machin
 
 
 ## Upgrade notes
+
+**To version 2020-11-09 and higher:**
+```$global:iTopEnvironments``` is no longer available.
+
+Settings are now available through `Get-iTopEnvironment` and `Set-iTopEnvironment`
 
 **To version 2020-04-02 and higher:**  
 If you used the functions from previous versions of this module, it might be necessary to make some changes.  

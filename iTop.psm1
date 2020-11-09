@@ -6,7 +6,7 @@
 
 # Read configuration from JSON-file.
 # Let's make it $global so it can easily be altered
-$global:iTopEnvironments = @{}
+$script:iTopEnvironments = @{}
 
 If($psISE) {
     # Workaround for PowerShell ISE
@@ -24,7 +24,7 @@ Else {
 
 $Environments | ForEach-Object {
 	$EnvName = $_.Name -Replace ".json", ""
-	$global:iTopEnvironments."$EnvName" = ConvertFrom-JSON (Get-Content -Path $_.FullName -Raw)
+	$script:iTopEnvironments."$EnvName" = ConvertFrom-JSON (Get-Content -Path $_.FullName -Raw)
 	
 	# Write-Host "Loaded environment $EnvName"
 }
@@ -58,6 +58,89 @@ $Environments | ForEach-Object {
 	
 # endregion
 
+
+#region iTop environments
+
+
+	function Set-iTopEnvironment {
+	<#
+	 .Synopsis
+	 Create/edit an iTop environment in the current session
+	 
+	 .Description
+	 Create/edit an iTop environment in the current session
+	 
+	 .Parameter Environment
+	 Environment name
+	 
+	 .Parameter Settings
+	 Environment settings (object)
+	 
+	 .Parameter Persistent
+	 Optional. Save settings to the configuration file (JSON). Defaults to $False.
+	 
+	 .Notes
+	 2020-11-09: added function
+	#>
+		param(
+			[Parameter(Mandatory=$true)][String] $Environment,
+			[Parameter(Mandatory=$true)][PSCustomObject] $Settings,
+			[Parameter(Mandatory=$false)][Boolean] $Persistent = $False
+		)
+	 
+		$script:iTopEnvironments."$Environment" = $Settings
+		
+		If($Persistent -eq $True) {
+
+			If($psISE) {
+				# Workaround for PowerShell ISE
+				$EnvironmentPath = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\environments"
+			}
+			Else {
+				$EnvironmentPath = "$($PSScriptRoot)\environments"
+			}
+			
+			$Settings | ConvertTo-JSON | Out-File "$($EnvironmentPath)\$($Environment).json"
+
+		}
+	 
+	}
+	
+	function Get-iTopEnvironment {
+	<#
+	 .Synopsis
+	 Create/edit an iTop environment in the current session
+	 
+	 .Description
+	 Create/edit an iTop environment in the current session
+	 
+	 .Parameter Environment
+	 Optional. If specified, only this environment will be returned.
+	 
+	 .Notes
+	 2020-11-09: added function
+	#>
+		param(
+			[Parameter(Mandatory=$false)][AllowEmptyString()][String]$Environment = ""
+		)
+	 
+		$Environments = $script:iTopEnvironments
+		
+		If($Environment -ne "") {
+			$Environments = $Environments."$Environment"
+			
+			if($Environments -eq $null) {
+				throw "Environment $($Environment) was not defined (case sensitive!)"
+			}
+		}
+			
+		
+		return $Environments
+	 
+	}
+	
+#endregion iTop environments
+
 #region iTop (un)install related functions
 
 	<#
@@ -83,11 +166,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 		
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		
 		$installScript = $EnvSettings.App.UnattendedInstall.Script
 		$installXML = $EnvSettings.App.UnattendedInstall.XML
@@ -163,11 +246,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		
 		$Count = 0;
 		while($Loop -eq $true -or $Count -eq 0) {
@@ -219,11 +302,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		
 		$LanguageFiles = Get-ChildItem -Path $EnvSettings.App.Path -Recurse -Include @("*.dict.*.php", "*.dictionary.*.php")
 
@@ -288,11 +371,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		
 		# Prevent issues with filename
 		# This may be more limiting than what Combodo allows
@@ -386,11 +469,11 @@ $Environments | ForEach-Object {
 		
 		)
 		
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		$Path = $EnvSettings.Extensions.Path
 		
 		# Rename directory 
@@ -446,11 +529,11 @@ $Environments | ForEach-Object {
 			[Parameter(Mandatory=$False)][String] $Folder = $null
 		)
 		
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		$sExtensionPath = $EnvSettings.Extensions.Path
 		
 		if($Folder -ne $null) {
@@ -573,11 +656,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		
 		# c:\xampp\php\php.exe c:\xampp\htdocs\itop\web\webservices\cron.php --auth_user=admin --auth_pwd=admin --verbose=1
 		$Expression = "$($EnvSettings.PHP.Path) $($EnvSettings.App.Path)\webservices\cron.php" +
@@ -637,11 +720,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 		
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		
 		# Shortcut, if possible.
 		if($Class -eq "") {
@@ -753,11 +836,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 		
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		
 		# Fields
 		if($Fields.keys.count -lt 1) {
@@ -829,6 +912,7 @@ $Environments | ForEach-Object {
 		
 	}
 	
+	
 	function Set-iTopObject {
 	<#
 	 .Synopsis
@@ -874,11 +958,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 		
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		
 		# Shortcut, if possible.
 		if($Class -eq "") {
@@ -1016,11 +1100,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 		
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		
 		# Shortcut, if possible.
 		if($Class -eq "") {
@@ -1143,11 +1227,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 
-		if($global:iTopEnvironments.Keys -notcontains $Environment) {
+		if($script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $global:iTopEnvironments."$Environment"
+		$EnvSettings = $script:iTopEnvironments."$Environment"
 		
 		[Xml]$xmlDoc = Get-Content ($EnvSettings.App.Path + "\data\datamodel-production.xml")
 		return (Get-iTopClassFromNode -Recurse $Recurse -XmlNode $xmlDoc.itop_design.classes.class -class $Class)
