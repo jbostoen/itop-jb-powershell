@@ -7,7 +7,7 @@
  * Localized data
  */
 
-Dict::Add('NL NL', 'Dutch', 'Dutch', array(
+Dict::Add('NL NL', 'Dutch', 'Nederlands', array(
 
 	//	'Class:SomeClass' => 'Class name',
 	//	'Class:SomeClass+' => 'More info on class name',
