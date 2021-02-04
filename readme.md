@@ -1,5 +1,5 @@
 # PSM1 iTop module for PowerShell
-Copyright (C) 2019-2020 Jeffrey Bostoen
+Copyright (C) 2019-2021 Jeffrey Bostoen
 
 [![License](https://img.shields.io/github/license/jbostoen/iTop-custom-extensions)](https://github.com/jbostoen/iTop-custom-extensions/blob/master/license.md)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/jbostoen)
@@ -98,7 +98,8 @@ All other settings are primarily when you have iTop installed on the same machin
 
 ## Upgrade notes
 
-**To version 2020-11-09 and higher:**
+**To version 2020-11-09 and higher:**  
+
 ```$global:iTopEnvironments``` is no longer available.
 
 Settings are now available through `Get-iTopEnvironment` and `Set-iTopEnvironment`
