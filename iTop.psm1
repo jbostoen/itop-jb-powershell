@@ -1,6 +1,6 @@
-# copyright   Copyright (C) 2019-2020 Jeffrey Bostoen
+# copyright   Copyright (C) 2019-2021 Jeffrey Bostoen
 # license     https://www.gnu.org/licenses/gpl-3.0.en.html
-# version     2020-04-02 12:17:00
+# version     2021-03-10 10:36:00
 
 # Variables
 
@@ -594,7 +594,8 @@ $Environments | ForEach-Object {
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^ \* @version     .*", " * @version     $($sVersionTimeStamp)"			
+			$Content = $Content -Replace "^([\s]{0,})\* @version([\s]{1,}).*", "`${1}* @version`${2}$($sVersionExtensions)"
+			$Content = $Content -Replace "^([\s]{0,})\* @copyright([\s]{1,})Copyright \((C|c)\) (20[0-9]{2})((\-| \- )20[0-9]{2}).+?([A-Za-z0-9 \-]{1,})", "`${1}* @copyright`${2}Copyright (c) `${4}-$($(Get-Date).ToString("yyyy")) `${7}"
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
 		
@@ -607,7 +608,7 @@ $Environments | ForEach-Object {
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^REM version     .*", "REM version     $($sVersionTimeStamp)"			
+			$Content = $Content -Replace "^REM version[\s]{1,}.*", "REM version     $($sVersionTimeStamp)"			
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
 		
@@ -617,7 +618,7 @@ $Environments | ForEach-Object {
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^# version     .*", "# version     $($sVersionTimeStamp)"			
+			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($sVersionTimeStamp)"			
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
 
@@ -627,10 +628,19 @@ $Environments | ForEach-Object {
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^# version     .*", "# version     $($sVersionTimeStamp)"			
+			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($sVersionTimeStamp)"			
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
 
+		# Update any MD file
+		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse -Include "*.md"
+
+		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
+
+			$Content = Get-Content "$($_.Directory)\$($_.Name)"
+			$Content = $Content -Replace "Copyright \((C|c)\) (20[0-9]{2})((\-| \- )20[0-9]{2}).+?([A-Za-z0-9 \-]{1,})", "Copyright (c) `${2}-$($(Get-Date).ToString("yyyy")) `${5}"
+			$Content | Set-Content "$($_.Directory)\$($_.Name)"
+		}
 
 	}
 	
