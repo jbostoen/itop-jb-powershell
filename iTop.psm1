@@ -153,17 +153,22 @@ $Environments | ForEach-Object {
 	 .Parameter Environment
 	 Environment name
 			
+	 .Parameter Clean
+	 Boolean. Defaults to $false. Clean environment.
+	 
 	 .Example
 	 Install-iTopUnattended
 
 	 .Notes
 	 2019-08-18: added function
 	 2020-04-01: added parameter Environment (optional)
+	 2021-02-04: added parameter Clean (optional, defaults to false)
 	#>
 	function Install-iTopUnattended { 
 
 		param(
-			[Alias('env')][String] $Environment = "default"
+			[Alias('env')][String] $Environment = "default",
+			[Boolean] $Clean = $false
 		)
 		
 		if($script:iTopEnvironments.Keys -notcontains $Environment) {
@@ -197,6 +202,10 @@ $Environments | ForEach-Object {
 		cd $scriptDir
 		
 		$Cmd = "$($phpExe) $($installScript) --response_file=$($installXML)";
+		
+		If($Clean -eq $true) {
+			$Cmd = "$($Cmd) --clean=1"
+		}
 		
 		Write-Host "Start: $((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))"
 		Write-Host "Running PHP script for unattended installation..."
