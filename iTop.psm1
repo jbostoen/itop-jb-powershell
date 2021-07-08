@@ -8,6 +8,7 @@
 # Let's make it $global so it can easily be altered
 $script:iTopEnvironments = @{}
 
+
 If($psISE) {
     # Workaround for PowerShell ISE
     $EnvironmentPath = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\environments"
@@ -697,6 +698,69 @@ $Environments | ForEach-Object {
 
 #region iTop REST/JSON API
 
+    function Invoke-iTopRestMethod {
+	<#
+	 .Synopsis
+	 Supporting function to make POST requests to the iTop API
+
+	 .Description
+	 Supporting function to make POST requests to the iTop API
+	 
+	 .Parameter Environment
+	 Environment name
+	 
+	 .Parameter JsonData
+     JSON Data
+     	 
+	 .Example
+	 Invoke-iTopRestMethod -Environment "name" -JsonData $JSONData
+
+	#>
+        param(
+			[Parameter(Mandatory=$true)][Hashtable] $JsonData,
+            [Alias('env')][String] $Environment = "default"
+        )
+
+  
+		    if($script:iTopEnvironments.Keys -notcontains $Environment) {
+			    throw "iTop module: no configuration for environment '$($Environment)'"
+		    }
+		
+		    $EnvSettings = $script:iTopEnvironments."$Environment"
+
+		    $ArgData = @{
+			    "version" = $EnvSettings.API.Version;
+			    "auth_user" = $EnvSettings.API.User;
+			    "auth_pwd" = $EnvSettings.API.Password;
+			    "json_data" = (ConvertTo-JSON $JsonData)
+		    }
+		
+		    $SecurePassword = ConvertTo-SecureString $EnvSettings.API.Password -AsPlainText -Force
+		    $Credential = New-Object System.Management.Automation.PSCredential($EnvSettings.API.User, $SecurePassword)
+
+            Switch -Regex ($EnvSettings.API.Url) {
+                "login_mode=url" {
+                    $Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache"}
+                    break
+                }
+                "login_mode=basic" {
+                    # Only in PowerShell 6 there seems to be support for -Authentication Basic
+                    # For Basic Authentication:
+                    $Base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $EnvSettings.API.User,$EnvSettings.API.Password)))
+                    $Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache";"Authorization"=("Basic {0}" -f $Base64AuthInfo)}
+                    break
+                }
+                default {
+                    throw "Currently only basic and URL login modes are supported. Please add the login_mode parameter to the URL $($EnvSettings.API.Url)"
+                }
+            }
+
+
+
+            return $Content
+
+    }
+
 
 	function Get-iTopObject {
 	<#
@@ -777,18 +841,7 @@ $Environments | ForEach-Object {
 			"page"=$Page
 		};
 		
-		$ArgData = @{
-			'version'=$EnvSettings.API.Version;
-			'auth_user'=$EnvSettings.API.User;
-			'auth_pwd'=$EnvSettings.API.Password;
-			'json_data'=(ConvertTo-JSON $JsonData)
-		}
-		
-		$SecurePassword = ConvertTo-SecureString $EnvSettings.API.Password -AsPlainText -Force
-		$Credential = New-Object System.Management.Automation.PSCredential($EnvSettings.API.User, $SecurePassword)
-
-
-		$Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache"} -Credential $Credential
+		$Content = Invoke-iTopRestMethod -Environment $Environment -JsonData $JsonData
 
 	
 		# iTop API did not return an error
@@ -890,17 +943,7 @@ $Environments | ForEach-Object {
 			'comment'=$Comment
 		};
 		
-		$ArgData = @{
-			'version'=$EnvSettings.API.Version;
-			'auth_user'=$EnvSettings.API.User;
-			'auth_pwd'=$EnvSettings.API.Password;
-			'json_data'=(ConvertTo-JSON $JsonData -Depth 100) # Max depth for serialization is 1024
-		}
-		
-		$SecurePassword = ConvertTo-SecureString $EnvSettings.API.Password -AsPlainText -Force
-		$Credential = New-Object System.Management.Automation.PSCredential($EnvSettings.API.User, $SecurePassword)
-		$Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache"} -Credential $Credential
-
+		$Content = Invoke-iTopRestMethod -Environment $Environment -JsonData $JsonData
 	
 		
 		# iTop API did not return an error
@@ -1042,17 +1085,8 @@ $Environments | ForEach-Object {
 			'comment'=$Comment
 		};
 		
-		$ArgData = @{
-			'version'=$EnvSettings.API.Version;
-			'auth_user'=$EnvSettings.API.User;
-			'auth_pwd'=$EnvSettings.API.Password;
-			'json_data'=(ConvertTo-JSON $JsonData)
-		}
-		
-		$SecurePassword = ConvertTo-SecureString $EnvSettings.API.Password -AsPlainText -Force
-		$Credential = New-Object System.Management.Automation.PSCredential($EnvSettings.API.User, $SecurePassword)
-		$Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache"} -Credential $Credential
- 
+		$Content = Invoke-iTopRestMethod -Environment $Environment -JsonData $JsonData
+
 
 		# Valid HTTP response
 		
@@ -1175,17 +1209,10 @@ $Environments | ForEach-Object {
 			"class"=$Class;
 			'comment'=$Comment
 		};
+
 		
-		$ArgData = @{
-			'version'=$EnvSettings.API.Version;
-			'auth_user'=$EnvSettings.API.User;
-			'auth_pwd'=$EnvSettings.API.Password;
-			'json_data'=(ConvertTo-JSON $JsonData)
-		}
 		
-		$SecurePassword = ConvertTo-SecureString $EnvSettings.API.Password -AsPlainText -Force
-		$Credential = New-Object System.Management.Automation.PSCredential($EnvSettings.API.User, $SecurePassword)
-		$Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache"} -Credential $Credential
+		$Content = Invoke-iTopRestMethod -Environment $Environment -JsonData $JsonData
  
 	
 		

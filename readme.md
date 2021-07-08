@@ -29,6 +29,7 @@ The most important limitation is that with each HTTP request, only one object ca
 * `Get-iTopClass`: gets overview of each class, including parent and module where it's defined or changed
 * `Get-iTopCommand`: shows all iTop commands in this PS1 module.
 * `Get-iTopEnvironment`: set settings of an iTop environment
+* `Invoke-iTopRestMethod`: invokes POST request
 * `New-iTopExtension`: creates new extension from template
 * `Remove-iTopLanguage`: removes all unnecessary language files
 * `Rename-iTopExtension`: renames an extension. Renames folder, renames default files, replaces extension name in those files...
@@ -53,7 +54,7 @@ All other settings are primarily when you have iTop installed on the same machin
 		 
 	
 	"API": {
-		"Url":  "http://127.0.0.1/itop/web/webservices/rest.php",
+		"Url":  "http://127.0.0.1/itop/web/webservices/rest.php?login_mode=url",
 		"Version":  "1.3",
 		"Password":  "admin",
 		"Output_Fields":  "*",
@@ -97,6 +98,11 @@ All other settings are primarily when you have iTop installed on the same machin
 
 
 ## Upgrade notes
+
+**To version 2021-07-08 and higher:**  
+Adjust URL to contain ```login_mode``` parameter to URL in configurations.
+Currently supported values are 'basic' and 'url'.
+
 
 **To version 2020-11-09 and higher:**  
 
