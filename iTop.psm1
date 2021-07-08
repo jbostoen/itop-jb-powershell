@@ -792,7 +792,10 @@ $Environments | ForEach-Object {
 
 	
 		# iTop API did not return an error
-		If($Content.code -eq 0) {
+		If($Content.code -eq $null) {
+            throw "iTop API did not return expected data: $($Content)"
+        }
+        ElseIf($Content.code -eq 0) {
 	
 			[Array]$Objects = @()
 		
@@ -901,7 +904,10 @@ $Environments | ForEach-Object {
 	
 		
 		# iTop API did not return an error
-		If($Content.code -eq 0) {
+		If($Content.code -eq $null) {
+            throw "iTop API did not return expected data: $($Content)"
+        }
+        ElseIf($Content.code -eq 0) {
 		
 			[Array]$Objects = @()
 			
@@ -1051,7 +1057,10 @@ $Environments | ForEach-Object {
 		# Valid HTTP response
 		
 		# iTop API did not return an error
-		If($Content.code -eq 0) {
+		If($Content.code -eq $null) {
+            throw "iTop API did not return expected data: $($Content)"
+        }
+        ElseIf($Content.code -eq 0) {
 		
 			[Array]$Objects = @()
 			
@@ -1181,7 +1190,10 @@ $Environments | ForEach-Object {
 	
 		
 		# iTop API did not return an error
-		If($Content.code -eq 0) {
+		If($Content.code -eq $null) {
+            throw "iTop API did not return expected data: $($Content)"
+        }
+        ElseIf($Content.code -eq 0) {
 		
 			[Array]$Objects = @()
 			
