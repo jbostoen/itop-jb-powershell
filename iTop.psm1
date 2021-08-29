@@ -208,7 +208,7 @@ $Environments | ForEach-Object {
 		
 		
 		If($Clean -eq $true) {
-            $Cmd = "$($phpExe) $($installScript) --response_file=$($installXML) --clean=1";
+            $Cmd = "$($phpExe) $($installScript) --response_file=$($installCleanXML) --clean=1";
 		}
         Else {
             $Cmd = "$($phpExe) $($installScript) --response_file=$($installXML)";
