@@ -1,7 +1,7 @@
 {
 
 	"API": {
-		"Url":  "http://127.0.0.1/itop/web/webservices/rest.php?login_mode=url",
+		"Url":  "http://127.0.0.1:8181/itop/web/webservices/rest.php?login_mode=url",
 		"Version":  "1.3",
 		"Password":  "admin",
 		"Output_Fields":  "*",
@@ -10,12 +10,13 @@
 	
 	"App":  {
 		"Path":  "C:\\xampp\\htdocs\\iTop\\web", 
-		"ConfigFile":  "C:\\xampp\\htdocs\\iTop\\web\\conf\\production\\config-itop.php", 
+		"ConfigFile":  "C:\\xampp64\\htdocs\\iTop\\web\\conf\\production\\config-itop.php", 
 		
 		
 		"UnattendedInstall": {
-			"Script":  "C:\\xampp\\htdocs\\iTop\\web\\toolkit\\unattended_install.php", 
-			"XML":  "C:\\xampp\\htdocs\\iTop\\web\\toolkit\\unattended_install.xml" 
+			"Script":  "C:\\xampp64\\htdocs\\iTop\\web\\toolkit\\unattended_install.php", 
+			"XML":  "C:\\xampp64\\htdocs\\iTop\\web\\toolkit\\unattended_install.xml",
+			"CleanXML":  "C:\\xampp64\\htdocs\\iTop\\web\\toolkit\\unattended_install_clean.xml"
 		},
 		 
 		"Languages": [
@@ -26,7 +27,7 @@
 	},
 	
 	"Extensions": {
-	   "Path":  "C:\\xampp\\htdocs\\iTop\\web\\extensions", 
+	   "Path":  "C:\\xampp64\\htdocs\\iTop\\web\\extensions", 
 	   "Url":  "https://jbostoen.github.io/iTop-extensions-documentation/",
 	   "VersionMin":  "2.6.0", 
 	   "VersionDataModel":  "1.6", 
@@ -41,7 +42,7 @@
 	},
 	
 	"PHP": {
-		"Path": "C:\\xampp\\php\\php.exe"
+		"Path": "C:\\xampp64\\php\\php.exe"
 	}
 	
 }

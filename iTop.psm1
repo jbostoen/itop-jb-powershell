@@ -30,6 +30,8 @@ $Environments | ForEach-Object {
 	# Write-Host "Loaded environment $EnvName"
 }
 
+
+
 # region Common
 
 	function Get-iTopCommand {
@@ -180,6 +182,7 @@ $Environments | ForEach-Object {
 		
 		$installScript = $EnvSettings.App.UnattendedInstall.Script
 		$installXML = $EnvSettings.App.UnattendedInstall.XML
+		$installCleanXML = $EnvSettings.App.UnattendedInstall.CleanXML
 		$phpExe = $EnvSettings.PHP.Path
 		
 		If((Test-Path -Path $installScript) -eq $False) {
@@ -202,11 +205,14 @@ $Environments | ForEach-Object {
 		
 		cd $scriptDir
 		
-		$Cmd = "$($phpExe) $($installScript) --response_file=$($installXML)";
+		
 		
 		If($Clean -eq $true) {
-			$Cmd = "$($Cmd) --clean=1"
+            $Cmd = "$($phpExe) $($installScript) --response_file=$($installXML) --clean=1";
 		}
+        Else {
+            $Cmd = "$($phpExe) $($installScript) --response_file=$($installXML)";
+        }
 		
 		Write-Host "Start: $((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))"
 		Write-Host "Running PHP script for unattended installation..."
