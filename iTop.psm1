@@ -738,7 +738,7 @@ $Environments | ForEach-Object {
 			    "version" = $EnvSettings.API.Version;
 			    "auth_user" = $EnvSettings.API.User;
 			    "auth_pwd" = $EnvSettings.API.Password;
-			    "json_data" = (ConvertTo-JSON $JsonData)
+			    "json_data" = (ConvertTo-JSON $JsonData -Depth 10)
 		    }
 		
 		    $SecurePassword = ConvertTo-SecureString $EnvSettings.API.Password -AsPlainText -Force
@@ -760,8 +760,6 @@ $Environments | ForEach-Object {
                     throw "Currently only basic and URL login modes are supported. Please add the login_mode parameter to the URL $($EnvSettings.API.Url)"
                 }
             }
-
-
 
             return $Content
 
@@ -1092,7 +1090,6 @@ $Environments | ForEach-Object {
 		};
 		
 		$Content = Invoke-iTopRestMethod -Environment $Environment -JsonData $JsonData
-
 
 		# Valid HTTP response
 		
