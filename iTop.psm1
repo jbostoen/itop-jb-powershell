@@ -26,7 +26,20 @@ Else {
 $Environments | ForEach-Object {
 	$EnvName = $_.Name -Replace ".json", ""
 	$script:iTopEnvironments."$EnvName" = ConvertFrom-JSON (Get-Content -Path $_.FullName -Raw)
-	
+
+    If($script:iTopEnvironments."$EnvName".Variables -ne $null) {
+        $Settings = Get-Content -Path $_.FullName -Raw
+
+        # Replace variables
+        $script:iTopEnvironments."$EnvName".Variables.PSObject.Properties | ForEach-Object {
+        
+            $Settings = $Settings -Replace "%$($_.Name)%", $_.Value
+
+        }
+
+	    $script:iTopEnvironments."$EnvName" = ConvertFrom-JSON $Settings
+	}
+
 	# Write-Host "Loaded environment $EnvName"
 }
 

@@ -51,7 +51,9 @@ All other settings are primarily when you have iTop installed on the same machin
 ```
 {
 
-		 
+	"Variables": {
+		"Environment": "production",
+	},
 	
 	"API": {
 		"Url":  "http://127.0.0.1/itop/web/webservices/rest.php?login_mode=url",
@@ -68,7 +70,8 @@ All other settings are primarily when you have iTop installed on the same machin
 		
 		"UnattendedInstall": {
 			"Script":  "C:\\xampp\\htdocs\\iTop\\web\\toolkit\\unattended_install.php", 
-			"XML":  "C:\\xampp\\htdocs\\iTop\\web\\toolkit\\unattended_install.xml" 
+			"XML":  "C:\\xampp\\htdocs\\iTop\\web\\toolkit\\unattended_install.xml",
+			"CleanXML":  "C:\\xampp\\htdocs\\iTop\\web\\toolkit\\unattended_install_clean.xml",
 		},
 		 
 		"Languages": [
@@ -95,6 +98,9 @@ All other settings are primarily when you have iTop installed on the same machin
 }
 
 ```
+
+**Variables**: any key you define here, can be used as a variable (%name%) in the other parts of the configuration. Strings only for now.
+
 
 
 ## Upgrade notes
