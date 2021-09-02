@@ -191,6 +191,9 @@ $Environments | ForEach-Object {
 		If((Test-Path -Path $installXML) -eq $False) {
 			throw "Unattended install XML not found: $($installXML). Specify correct location"
 		}
+		If($installCleanXML -ne $null -and (Test-Path -Path $installCleanXML) -eq $False) {
+			throw "Unattended clean install XML not found: $($installXML). Specify correct location"
+		}
 		If((Test-Path -Path $phpExe) -eq $False) {
 			throw "PHP.exe not found: $($phpExe). Specify correct location"
 		}
