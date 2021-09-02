@@ -1,33 +1,38 @@
 {
-
+	"Variables" : {
+		"%Environment%": "production",
+		"User": "admin",
+		"Password": "Admin*1234",
+		"Path": "C:\\xampp64\\htdocs\\itop\\web"
+	},
 	"API": {
-		"Url":  "http://127.0.0.1:8181/itop/web/webservices/rest.php?login_mode=url",
+		"Url":  "https://127.0.0.1:8182/itop-clients/web/webservices/rest.php?login_mode=url&switch_env=%Environment%",
 		"Version":  "1.3",
-		"Password":  "Admin*1234",
+		"Password":  "%Password%",
 		"Output_Fields":  "*",
-		"User":  "admin"
+		"User":  "%User%"
 	},
 	
 	"App":  {
-		"Path":  "C:\\xampp\\htdocs\\iTop\\web", 
-		"ConfigFile":  "C:\\xampp64\\htdocs\\iTop\\web\\conf\\production\\config-itop.php", 
+		"Path":  "%Path%", 
+		"ConfigFile":  "%Path%\\conf\\%Environment%\\config-itop.php", 
 		
 		
 		"UnattendedInstall": {
-			"Script":  "C:\\xampp64\\htdocs\\iTop\\web\\toolkit\\unattended_install.php", 
-			"XML":  "C:\\xampp64\\htdocs\\iTop\\web\\toolkit\\unattended_install.xml",
-			"CleanXML":  "C:\\xampp64\\htdocs\\iTop\\web\\toolkit\\unattended_install_clean.xml"
+			"Script":  "%Path%\\toolkit\\unattended_install.php", 
+			"InstallXML":  "%Path%\\toolkit\\xml\\%Environment%\\install.xml",
+			"UpgradeXML":  "%Path%\\toolkit\\xml\\%Environment%\\upgrade.xml"
 		},
 		 
 		"Languages": [
 			"en",
-			"nl",
-			"fr"
+			"fr",
+			"nl"
 		] 
 	},
 	
 	"Extensions": {
-	   "Path":  "C:\\xampp64\\htdocs\\iTop\\web\\extensions", 
+	   "Path":  "%Path%\\extensions", 
 	   "Url":  "https://jbostoen.github.io/iTop-extensions-documentation/",
 	   "VersionMin":  "2.6.0", 
 	   "VersionDataModel":  "1.6", 
@@ -37,8 +42,8 @@
 	},
 	
 	"Cron": {
-		"User": "admin",
-		"Password": "Admin*1234"
+		"User": "%User%",
+		"Password": "%Password%"
 	},
 	
 	"PHP": {

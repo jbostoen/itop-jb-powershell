@@ -27,20 +27,28 @@ Else {
 $Environments | ForEach-Object {
 
 	$EnvName = $_.Name -Replace ".json", ""
-	$Script:iTopEnvironments."$EnvName" = ConvertFrom-JSON (Get-Content -Path $_.FullName -Raw)
 
-    If($Script:iTopEnvironments."$EnvName".Variables -ne $null) {
-        $Settings = Get-Content -Path $_.FullName -Raw
+	$UnmodifiedSettings = ConvertFrom-JSON (Get-Content -Path $_.FullName -Raw)
+    $SettingsJSON = Get-Content -Path $_.FullName -Raw
+    
+    If($UnmodifiedSettings.Variables -ne $null) {
+
 
         # Replace variables
-        $Script:iTopEnvironments."$EnvName".Variables.PSObject.Properties | ForEach-Object {
+        $UnmodifiedSettings.Variables.PSObject.Properties | ForEach-Object {
         
-            $Settings = $Settings -Replace "%$($_.Name)%", ($_.Value -replace "\\", "\\\\")
+            # Still needs to be converted to JSON, so escape backslash again
+            $SettingsJSON = $SettingsJSON -Replace "%$($_.Name)%", $($_.Value -replace "\\", "\\")
 
         }
 
-	    $Script:iTopEnvironments."$EnvName" = ConvertFrom-JSON $Settings
+	    
 	}
+    
+    $Script:iTopEnvironments."$EnvName" = ConvertFrom-JSON $SettingsJSON
+    
+
+    
 
 	# Write-Host "Loaded environment $EnvName"
 }
@@ -175,7 +183,7 @@ $Environments | ForEach-Object {
 	 Switch. Installs clean environment. Warning: drops data!
 
 	 .Parameter Force
-	 Switch. Forces removal of .maintenance and .readonly files if present (blocking execution of unattended install script)
+	 Switch. Forces removal of .maintenance and .readonly files if present (blocking ex
 	 
 	 .Example
 	 Install-iTopUnattended
