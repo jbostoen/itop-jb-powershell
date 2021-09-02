@@ -226,10 +226,10 @@ $Environments | ForEach-Object {
 		If((Test-Path -Path $InstallScript) -eq $False) {
 			throw "Unattended install script not found: $($InstallScript). Download from iTop Wiki or specify correct location"
 		}
-		If((Test-Path -Path $UpgradeXML) -eq $False) {
+		If($Clean.IsPresent -eq $false -and (Test-Path -Path $UpgradeXML) -eq $False) {
 			throw "Unattended upgrade install XML not found: $($UpgradeXML). Specify correct location"
 		}
-		If($InstallXML -ne $null -and (Test-Path -Path $InstallXML) -eq $False) {
+		If($Clean.IsPresent -eq $true -and $InstallXML -ne $null -and (Test-Path -Path $InstallXML) -eq $False) {
 			throw "Unattended clean install XML not found: $($InstallXML). Specify correct location"
 		}
 		If((Test-Path -Path $PhpExe) -eq $False) {
