@@ -6,10 +6,10 @@
 
 # Read configuration from JSON-file.
 # Let's make it $global so it can easily be altered
-$script:iTopEnvironments = @{}
+$Script:iTopEnvironments = @{}
 
 
-If($psISE) {
+If($PsISE) {
     # Workaround for PowerShell ISE
     $EnvironmentPath = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\environments"
     if((Test-Path -Path $EnvironmentPath) -eq $false) {
@@ -23,21 +23,23 @@ Else {
     $Environments = Get-ChildItem -Path "$($PSScriptRoot)\environments" -Include "*.json" -Recurse
 }
 
+# Perform actions on several environments
 $Environments | ForEach-Object {
-	$EnvName = $_.Name -Replace ".json", ""
-	$script:iTopEnvironments."$EnvName" = ConvertFrom-JSON (Get-Content -Path $_.FullName -Raw)
 
-    If($script:iTopEnvironments."$EnvName".Variables -ne $null) {
+	$EnvName = $_.Name -Replace ".json", ""
+	$Script:iTopEnvironments."$EnvName" = ConvertFrom-JSON (Get-Content -Path $_.FullName -Raw)
+
+    If($Script:iTopEnvironments."$EnvName".Variables -ne $null) {
         $Settings = Get-Content -Path $_.FullName -Raw
 
         # Replace variables
-        $script:iTopEnvironments."$EnvName".Variables.PSObject.Properties | ForEach-Object {
+        $Script:iTopEnvironments."$EnvName".Variables.PSObject.Properties | ForEach-Object {
         
-            $Settings = $Settings -Replace "%$($_.Name)%", $_.Value
+            $Settings = $Settings -Replace "%$($_.Name)%", ($_.Value -replace "\\", "\\\\")
 
         }
 
-	    $script:iTopEnvironments."$EnvName" = ConvertFrom-JSON $Settings
+	    $Script:iTopEnvironments."$EnvName" = ConvertFrom-JSON $Settings
 	}
 
 	# Write-Host "Loaded environment $EnvName"
@@ -104,11 +106,11 @@ $Environments | ForEach-Object {
 			[Parameter(Mandatory=$false)][Boolean] $Persistent = $False
 		)
 	 
-		$script:iTopEnvironments."$Environment" = $Settings
+		$Script:iTopEnvironments."$Environment" = $Settings
 		
 		If($Persistent -eq $True) {
 
-			If($psISE) {
+			If($PsISE) {
 				# Workaround for PowerShell ISE
 				$EnvironmentPath = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\environments"
 			}
@@ -140,7 +142,7 @@ $Environments | ForEach-Object {
 			[Parameter(Mandatory=$false)][AllowEmptyString()][String]$Environment = ""
 		)
 	 
-		$Environments = $script:iTopEnvironments
+		$Environments = $Script:iTopEnvironments
 		
 		If($Environment -ne "") {
 			$Environments = $Environments."$Environment"
@@ -170,7 +172,10 @@ $Environments | ForEach-Object {
 	 Environment name
 			
 	 .Parameter Clean
-	 Boolean. Defaults to $false. Clean environment.
+	 Switch. Installs clean environment. Warning: drops data!
+
+	 .Parameter Force
+	 Switch. Forces removal of .maintenance and .readonly files if present (blocking execution of unattended install script)
 	 
 	 .Example
 	 Install-iTopUnattended
@@ -178,37 +183,49 @@ $Environments | ForEach-Object {
 	 .Notes
 	 2019-08-18: added function
 	 2020-04-01: added parameter Environment (optional)
-	 2021-02-04: added parameter Clean (optional, defaults to false)
+	 2021-02-04: added parameter Clean (optional)
+	 2021-09-02: added parameter Force (optional)
 	#>
 	function Install-iTopUnattended { 
 
 		param(
 			[Alias('env')][String] $Environment = "default",
-			[Boolean] $Clean = $false
+			[Switch] $Clean,
+            [Switch] $Force
 		)
 		
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
 		
-		$installScript = $EnvSettings.App.UnattendedInstall.Script
-		$installXML = $EnvSettings.App.UnattendedInstall.XML
-		$installCleanXML = $EnvSettings.App.UnattendedInstall.CleanXML
-		$phpExe = $EnvSettings.PHP.Path
+		$InstallScript = $EnvSettings.App.UnattendedInstall.Script
 		
-		If((Test-Path -Path $installScript) -eq $False) {
-			throw "Unattended install script not found: $($installScript). Download from iTop Wiki or specify correct location"
+        # Legacy
+        if($EnvSettings.App.UnattendedInstall.UpgradeXML -ne $null) {
+            $UpgradeXML = $EnvSettings.App.UnattendedInstall.UpgradeXML
+        }
+        elseif($EnvSettings.App.UnattendedInstall.XML -ne $null) {
+            Write-Host "Warning: you are using 'XML' instead of 'UpgradeXML' in the JSON configuration file ($Environment). This is deprecated and will not be supported in a future release." -ForegroundColor Yellow
+            $UpgradeXML = $EnvSettings.App.UnattendedInstall.XML
+        }
+
+
+		$InstallXML = $EnvSettings.App.UnattendedInstall.InstallXML
+		$PhpExe = $EnvSettings.PHP.Path
+		
+		If((Test-Path -Path $InstallScript) -eq $False) {
+			throw "Unattended install script not found: $($InstallScript). Download from iTop Wiki or specify correct location"
 		}
-		If((Test-Path -Path $installXML) -eq $False) {
-			throw "Unattended install XML not found: $($installXML). Specify correct location"
+		If((Test-Path -Path $UpgradeXML) -eq $False) {
+			throw "Unattended upgrade install XML not found: $($UpgradeXML). Specify correct location"
 		}
-		If($installCleanXML -ne $null -and (Test-Path -Path $installCleanXML) -eq $False) {
-			throw "Unattended clean install XML not found: $($installXML). Specify correct location"
+		If($InstallXML -ne $null -and (Test-Path -Path $InstallXML) -eq $False) {
+			throw "Unattended clean install XML not found: $($InstallXML). Specify correct location"
 		}
-		If((Test-Path -Path $phpExe) -eq $False) {
-			throw "PHP.exe not found: $($phpExe). Specify correct location"
+		If((Test-Path -Path $PhpExe) -eq $False) {
+			throw "PHP.exe not found: $($PhpExe). Specify correct location"
 		}
 		
 		# Make config writable
@@ -217,23 +234,34 @@ $Environments | ForEach-Object {
 		# PHP.exe: require statements etc relate to current working directory. 
 		# Need to temporarily change this!
 		$OriginalDir = (Get-Item -Path ".\").FullName;
-		$scriptDir = (Get-Item -Path $installScript).Directory.FullName;
+		$ScriptDir = (Get-Item -Path $InstallScript).Directory.FullName;
 		
-		cd $scriptDir
+		cd $ScriptDir
+		
+
+        If($Force.IsPresent) {
+            $FileReadOnly = "$($EnvSettings.App.Path)\data\.readonly"
+            $FileMaintenance = "$($EnvSettings.App.Path)\data\.maintenance"
+            If((Test-Path -Path $FileReadOnly) -eq $true) {
+                Remove-Item -Path $FileReadOnly
+            }
+            If((Test-Path -Path $FileMaintenance) -eq $true) {
+                Remove-Item -Path $FileMaintenance
+            }
+        }
 		
 		
-		
-		If($Clean -eq $true) {
-            $Cmd = "$($phpExe) $($installScript) --response_file=$($installCleanXML) --clean=1";
+		If($Clean.IsPresent) {
+            $Cmd = "$($PhpExe) $($InstallScript) --response_file=$($InstallXML) --clean=1";
 		}
         Else {
-            $Cmd = "$($phpExe) $($installScript) --response_file=$($installXML)";
+            $Cmd = "$($PhpExe) $($InstallScript) --response_file=$($UpgradeXML)";
         }
 		
 		Write-Host "Start: $((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))"
 		Write-Host "Running PHP script for unattended installation..."
-		Write-Host "Unattended installation script: $($installScript)"
-		Write-Host "Unattended installation XML: $($installXML)"
+		Write-Host "Script: $($InstallScript)"
+		Write-Host "XML: $($InstallXML)"
 		Write-Host "Command: $($Cmd)"
 		Write-Host "$('*' * 25)"
 		
@@ -278,11 +306,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
 		
 		$Count = 0;
 		while($Loop -eq $true -or $Count -eq 0) {
@@ -337,11 +365,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
 		
 		$LanguageFiles = Get-ChildItem -Path $EnvSettings.App.Path -Recurse -Include @("*.dict.*.php", "*.dictionary.*.php")
 
@@ -406,11 +434,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
 		
 		# Prevent issues with filename
 		# This may be more limiting than what Combodo allows
@@ -504,11 +532,11 @@ $Environments | ForEach-Object {
 		
 		)
 		
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
 		$Path = $EnvSettings.Extensions.Path
 		
 		# Rename directory 
@@ -564,28 +592,28 @@ $Environments | ForEach-Object {
 			[Parameter(Mandatory=$False)][String] $Folder = $null
 		)
 		
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
-		$sExtensionPath = $EnvSettings.Extensions.Path
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
+		$SExtensionPath = $EnvSettings.Extensions.Path
 		
 		if($Folder -ne $null) {
 		
-			$sExtensionPath += "\" + $Folder
+			$SExtensionPath += "\" + $Folder
 			
 			# Check if specified folder exists in order to suppress further warnings
-			if((Test-Path -Path $sExtensionPath) -eq $False) {
-				throw "Extension path: folder does not exist: $($sExtensionPath)"
+			if((Test-Path -Path $SExtensionPath) -eq $False) {
+				throw "Extension path: folder does not exist: $($SExtensionPath)"
 			}
 		}
 		
-		$sVersionTimeStamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-		$sVersionExtensions = $($EnvSettings.Extensions.VersionMin -Replace "\.[0-9]$", "") + '.' + (Get-Date -Format "yyMMdd")
+		$SVersionTimeStamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+		$SVersionExtensions = $($EnvSettings.Extensions.VersionMin -Replace "\.[0-9]$", "") + '.' + (Get-Date -Format "yyMMdd")
 		
 		# Either add code to do more proper filtering or just make sure it's only applied to a subset of extenions.
-		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse -Include "datamodel.*.xml"
+		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "datamodel.*.xml"
 
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"
@@ -593,14 +621,14 @@ $Environments | ForEach-Object {
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
 
-		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse -Include "extension.xml"
+		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "extension.xml"
 
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"
 			
 			# General iTop extension release info
-			$Content = $Content -Replace "<version>.*<\/version>", "<version>$($sVersionExtensions)</version>" 
-			$Content = $Content -Replace "<company>.*<\/company>", "<company>$($sCompany)</company>" 
+			$Content = $Content -Replace "<version>.*<\/version>", "<version>$($SVersionExtensions)</version>" 
+			$Content = $Content -Replace "<company>.*<\/company>", "<company>$($SCompany)</company>" 
 			$Content = $Content -Replace "<release_date>.*<\/release_date>", "<release_date>$(Get-Date -Format 'yyyy-MM-dd')</release_date>" 
 			$Content = $Content -Replace "<itop_version_min>.*<\/itop_version_min>", "<itop_version_min>$($EnvSettings.Extensions.VersionMin)</itop_version_min>"
 			
@@ -609,24 +637,24 @@ $Environments | ForEach-Object {
 		}
 
 		# Update module files
-		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse -Include "module.*.php"
+		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "module.*.php"
 
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
-			$unused_but_surpress_output = $_.Name -match "^(.*)\.(.*)\.(.*)$"
-			$sModuleShortName = $Matches[2]; # magic
+			$Unused_but_surpress_output = $_.Name -match "^(.*)\.(.*)\.(.*)$"
+			$SModuleShortName = $Matches[2]; # magic
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"
-			$Content = $Content -Replace "'$($sModuleShortName)\/(.*)',", "'$($sModuleShortName)/$($sVersionExtensions)',"
+			$Content = $Content -Replace "'$($SModuleShortName)\/(.*)',", "'$($SModuleShortName)/$($SVersionExtensions)',"
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
 
 
 		# Update any PHP file
-		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse -Include "*.php"
+		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.php"
 
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^([\s]{0,})\* @version([\s]{1,}).*", "`${1}* @version`${2}$($sVersionExtensions)"
+			$Content = $Content -Replace "^([\s]{0,})\* @version([\s]{1,}).*", "`${1}* @version`${2}$($SVersionExtensions)"
 			$Content = $Content -Replace "^([\s]{0,})\* @copyright([\s]{1,})Copyright \((C|c)\) (20[0-9]{2})((\-| \- )20[0-9]{2}).+?([A-Za-z0-9 \-]{1,})", "`${1}* @copyright`${2}Copyright (c) `${4}-$($(Get-Date).ToString("yyyy")) `${7}"
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
@@ -635,37 +663,37 @@ $Environments | ForEach-Object {
 		# Script files
 
 		# Update any BAT file
-		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse -Include "*.bat"
+		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.bat"
 
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^REM version[\s]{1,}.*", "REM version     $($sVersionTimeStamp)"			
+			$Content = $Content -Replace "^REM version[\s]{1,}.*", "REM version     $($SVersionTimeStamp)"			
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
 		
 		# Update any PS1/PSM1 file
-		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse -Include "*.ps1", "*.psm1"
+		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.ps1", "*.psm1"
 
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($sVersionTimeStamp)"			
+			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($SVersionTimeStamp)"			
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
 
 		# Update any SH file
-		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse -Include "*.sh"
+		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.sh"
 
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($sVersionTimeStamp)"			
+			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($SVersionTimeStamp)"			
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
 
 		# Update any MD file
-		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse -Include "*.md"
+		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.md"
 
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 
@@ -701,11 +729,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
 		
 		# c:\xampp\php\php.exe c:\xampp\htdocs\itop\web\webservices\cron.php --auth_user=admin --auth_pwd=admin --verbose=1
 		$Expression = "$($EnvSettings.PHP.Path) $($EnvSettings.App.Path)\webservices\cron.php" +
@@ -744,11 +772,11 @@ $Environments | ForEach-Object {
         )
 
   
-		    if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		    if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			    throw "iTop module: no configuration for environment '$($Environment)'"
 		    }
 		
-		    $EnvSettings = $script:iTopEnvironments."$Environment"
+		    $EnvSettings = $Script:iTopEnvironments."$Environment"
 
 		    $ArgData = @{
 			    "version" = $EnvSettings.API.Version;
@@ -826,11 +854,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 		
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
 		
 		# Shortcut, if possible.
 		if($Class -eq "") {
@@ -934,11 +962,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 		
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
 		
 		# Fields
 		if($Fields.keys.count -lt 1) {
@@ -1049,11 +1077,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 		
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
 		
 		# Shortcut, if possible.
 		if($Class -eq "") {
@@ -1184,11 +1212,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 		
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
 		
 		# Shortcut, if possible.
 		if($Class -eq "") {
@@ -1307,11 +1335,11 @@ $Environments | ForEach-Object {
 			[Alias('env')][String] $Environment = "default"
 		)
 
-		if($script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
-		$EnvSettings = $script:iTopEnvironments."$Environment"
+		$EnvSettings = $Script:iTopEnvironments."$Environment"
 		
 		[Xml]$xmlDoc = Get-Content ($EnvSettings.App.Path + "\data\datamodel-production.xml")
 		return (Get-iTopClassFromNode -Recurse $Recurse -XmlNode $xmlDoc.itop_design.classes.class -class $Class)
