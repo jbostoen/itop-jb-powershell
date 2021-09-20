@@ -268,8 +268,6 @@ $Environments | ForEach-Object {
 		
 		Write-Host "Start: $((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))"
 		Write-Host "Running PHP script for unattended installation..."
-		Write-Host "Script: $($InstallScript)"
-		Write-Host "XML: $($InstallXML)"
 		Write-Host "Command: $($Cmd)"
 		Write-Host "$('*' * 25)"
 		
@@ -742,12 +740,18 @@ $Environments | ForEach-Object {
 		}
 		
 		$EnvSettings = $Script:iTopEnvironments."$Environment"
-		
-		# c:\xampp\php\php.exe c:\xampp\htdocs\itop\web\webservices\cron.php --auth_user=admin --auth_pwd=admin --verbose=1
-		$Expression = "$($EnvSettings.PHP.Path) $($EnvSettings.App.Path)\webservices\cron.php" +
+
+        $CLIArgs = "" +
 			" --auth_user=$($EnvSettings.Cron.User)" +
 			" --auth_pwd=$($EnvSettings.Cron.Password)" +
 			" --verbose=1"
+
+        If($EnvSettings.Variables.Environment -ne $null) {
+            $CLIArgs += " --switch_env=$($EnvSettings.Variables.Environment)"
+        }
+
+		# c:\xampp\php\php.exe c:\xampp\htdocs\itop\web\webservices\cron.php --auth_user=admin --auth_pwd=admin --verbose=1
+		$Expression = "$($EnvSettings.PHP.Path) $($EnvSettings.App.Path)\webservices\cron.php" + $CLIArgs
 		Invoke-Expression $Expression
 		
 	}
