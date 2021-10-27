@@ -8,7 +8,7 @@ Copyright (C) {{ ext_Year }} {{ ext_Author }}
 
 Need assistance with iTop or one of its extensions?  
 Need custom development?  
-Please get in touch to discuss the terms: **jbostoen.itop@outlook.com**
+Please get in touch to discuss the terms: **jbostoen.itop@outlook.com** / https://jeffreybostoen.be
 
 ## What?
 {{ ext_Description }}

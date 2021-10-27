@@ -752,6 +752,7 @@ $Environments | ForEach-Object {
 
 		# c:\xampp\php\php.exe c:\xampp\htdocs\itop\web\webservices\cron.php --auth_user=admin --auth_pwd=admin --verbose=1
 		$Expression = "$($EnvSettings.PHP.Path) $($EnvSettings.App.Path)\webservices\cron.php" + $CLIArgs
+        Write-Host $Expression
 		Invoke-Expression $Expression
 		
 	}
