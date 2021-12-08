@@ -1,4 +1,5 @@
 # {{ ext_Name }}
+
 Copyright (C) {{ ext_Year }} {{ ext_Author }}
 
 [![License](https://img.shields.io/github/license/jbostoen/iTop-custom-extensions)](https://github.com/jbostoen/iTop-custom-extensions/blob/master/license.md)
@@ -8,9 +9,11 @@ Copyright (C) {{ ext_Year }} {{ ext_Author }}
 
 Need assistance with iTop or one of its extensions?  
 Need custom development?  
-Please get in touch to discuss the terms: **jbostoen.itop@outlook.com** / https://jeffreybostoen.be
+Please get in touch to discuss the terms: **info@jeffreybostoen.be** / https://jeffreybostoen.be
+
 
 ## What?
+
 {{ ext_Description }}
 
 ## Cookbook

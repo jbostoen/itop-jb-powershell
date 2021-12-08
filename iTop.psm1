@@ -661,7 +661,7 @@ $Environments | ForEach-Object {
 
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
 			$Content = $Content -Replace "^([\s]{0,})\* @version([\s]{1,}).*", "`${1}* @version`${2}$($SVersionExtensions)"
-			$Content = $Content -Replace "^([\s]{0,})\* @copyright([\s]{1,})Copyright \((C|c)\) (20[0-9]{2})((\-| \- )20[0-9]{2}).+?([A-Za-z0-9 \-]{1,})", "`${1}* @copyright`${2}Copyright (c) `${4}-$($(Get-Date).ToString("yyyy")) `${7}"
+			$Content = $Content -Replace "^([\s]{0,})\* @copyright([\s]{1,})Copyright \((C|c)\) (20[0-9]{2})(((\-| \- )20[0-9]{2})|).+?([A-Za-z0-9 \-]{1,})", "`${1}* @copyright`${2}Copyright (c) `${4}-$($(Get-Date).ToString("yyyy")) `${8}"
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
 		
