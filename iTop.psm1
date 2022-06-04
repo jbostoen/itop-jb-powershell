@@ -1054,7 +1054,7 @@ $Environments | ForEach-Object {
 	 Uses iTop REST/JSON API to update object (core/update)
 	
 	 .Parameter Batch
-	 Boolean, defaults to 0. If $true: allows to update multiple objects at once.
+	 Boolean, defaults to $false. If $true: allows to update multiple objects at once.
 	 Note: this launches multiple HTTP requests, since iTop only supports updating one iTop object at a time.
 	 If an error occurs, any further updating is halted.
 	 
@@ -1197,7 +1197,7 @@ $Environments | ForEach-Object {
 	 Warning: might delete related objects automatically (just as a normal iTop delete operation would do).
 	 
 	 .Parameter Batch
-	 Boolean, defaults to 0. If $true: allows to update multiple objects at once.
+	 Boolean, defaults to $false. If $true: allows to update multiple objects at once.
 	 Note: this launches multiple HTTP requests, since iTop only supports updating one iTop object at a time.
 	 If an error occurs, any further updating is halted.
 	 

@@ -39,15 +39,24 @@ The most important limitation is that with each HTTP request, only one object ca
 * `Set-iTopExtensionReleaseInfo`: sets iTop extension release info (in "extensions" folder defined in the environment)
 * `Start-iTopCron`: starts iTop cron jobs
 
+## Installing
+
+Hint: you can make sure this module is always loaded by default.  
+
+- [ ] Enter `$env:PSModulePath` to see from which directories PowerShell tries to load modules.
+- [ ] Unzip the `.psm1` and `.psd` files in this folder. 
+- [ ] Open a new PowerShell console window.
+
 
 ## Configuration example
 
-"default" is the name of the default environment and should always be included.
-You can add more environments by adding a 'environment-name.json' file in **%UserProfile%\Documents\WindowsPowerShell\Modules\iTop\environments**
+"default" is the name of the default **environment** and should always be included.
+You can add more environments by adding an '**<environment-name>**.json' file in `%UserProfile%\Documents\WindowsPowerShell\Modules\iTop\environments`
 
 **API settings** are useful in all cases.
 All other settings are primarily when you have iTop installed on the same machine as where you are running the PowerShell module on.
 
+**Variables**: any key you define here, can be used as a variable (%name%) in the other parts of the configuration. Strings only for now.
 
 ```
 {
@@ -83,8 +92,8 @@ All other settings are primarily when you have iTop installed on the same machin
 	
 	"Extensions": {
 	   "Path":  "C:\\xampp\\htdocs\\iTop\\web\\extensions", 
-	   "Url":  "https://github.com/jbostoen/iTop-custom-extensions",
-	   "VersionMin":  "2.6.0", 
+	   "Url":  "https://jeffreybostoen.be",
+	   "VersionMin":  "2.7.0", 
 	   "VersionDataModel":  "1.6", 
 	   "Author":  "Jeffrey Bostoen", 
 	   "Company":  "", 
@@ -100,8 +109,55 @@ All other settings are primarily when you have iTop installed on the same machin
 
 ```
 
-**Variables**: any key you define here, can be used as a variable (%name%) in the other parts of the configuration. Strings only for now.
 
+## Basic examples
+
+You can execute for example `Get-Help Get-iTopobject` to get a full list and explanation of each parameter.
+
+Mind that the structure is based on [iTop's REST/JSON API](https://www.itophub.io/wiki/page?id=latest%3Aadvancedtopics%3Arest_json).   
+
+Retrieving user requests of a certain person (with ID 1).
+```
+$tickets = Get-iTopObject -env "default" -key "SELECT UserRequest WHERE caller = 1"
+```
+
+
+Creating a new organization. This will give you access to the ID (key) created for this organization.
+```
+$ClientOrg = New-iTopObject -Environment "default" -Class "Organization" -Fields @{
+	"name"="Demo Portal Org #1";
+	"deliverymodel_id"=$DeliveryModel.key;
+}
+
+# Print ID of the newly created object
+$ClientOrg.key
+
+# Print fields
+$ClientOrg.fields
+```
+
+Deleting an organization.
+```
+Remove-iTopObject -env "default" -key "SELECT Organization WHERE id = 1"
+```
+
+
+Updating an organization.
+```
+Set-iTopObject -env "default" -key "SELECT Organization WHERE id = 1" -Fields @{
+	"name"="Demo 2"
+}
+```
+
+Mind that by default, iTop will currently not allow you to update/delete multiple objects at once.  
+There must be one HTTP request per update/delete. To facilitate this, a `-Batch:$true` parameter exists.
+
+Updating an organization for multiple persons.
+```
+Set-iTopObject -env "default" -key "SELECT Person WHERE org_id = 999" -Batch:$true -Fields @{
+	"org_id"=1000
+}
+```
 
 
 ## Upgrade notes
