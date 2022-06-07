@@ -50,8 +50,11 @@ Hint: you can make sure this module is always loaded by default.
 
 ## Configuration example
 
-"default" is the name of the default **environment** and should always be included.
+"production" is the name of the default **environment** and should always be included.
 You can add more environments by adding an '**<environment-name>**.json' file in `%UserProfile%\Documents\WindowsPowerShell\Modules\iTop\environments`
+
+⚠ To be future proof: only use alphabetical characters, numbers or underscores in the filenames.  
+Some words are reserved words in PowerShell, so this module will not use "default.json" as a name anymore.
 
 **API settings** are useful in all cases.
 All other settings are primarily when you have iTop installed on the same machine as where you are running the PowerShell module on.
@@ -118,13 +121,13 @@ Mind that the structure is based on [iTop's REST/JSON API](https://www.itophub.i
 
 Retrieving user requests of a certain person (with ID 1).
 ```
-$tickets = Get-iTopObject -env "default" -key "SELECT UserRequest WHERE caller = 1"
+$tickets = Get-iTopObject -env "production" -key "SELECT UserRequest WHERE caller = 1"
 ```
 
 
 Creating a new organization. This will give you access to the ID (key) created for this organization.
 ```
-$ClientOrg = New-iTopObject -Environment "default" -Class "Organization" -Fields @{
+$ClientOrg = New-iTopObject -Environment "production" -Class "Organization" -Fields @{
 	"name"="Demo Portal Org #1";
 	"deliverymodel_id"=$DeliveryModel.key;
 }
@@ -138,13 +141,13 @@ $ClientOrg.fields
 
 Deleting an organization.
 ```
-Remove-iTopObject -env "default" -key "SELECT Organization WHERE id = 1"
+Remove-iTopObject -env "production" -key "SELECT Organization WHERE id = 1"
 ```
 
 
 Updating an organization.
 ```
-Set-iTopObject -env "default" -key "SELECT Organization WHERE id = 1" -Fields @{
+Set-iTopObject -env "production" -key "SELECT Organization WHERE id = 1" -Fields @{
 	"name"="Demo 2"
 }
 ```
@@ -154,13 +157,21 @@ There must be one HTTP request per update/delete. To facilitate this, a `-Batch:
 
 Updating an organization for multiple persons.
 ```
-Set-iTopObject -env "default" -key "SELECT Person WHERE org_id = 999" -Batch:$true -Fields @{
+Set-iTopObject -env "production" -key "SELECT Person WHERE org_id = 999" -Batch:$true -Fields @{
 	"org_id"=1000
 }
 ```
 
 
 ## Upgrade notes
+
+**To version 2022-06-07 and higher:**  
+
+Filenames of configuration files (.json) should only consist of alphabetical characters, numbers and underscores.  
+
+Some terms (such as the previous 'default.json') are forbidden in PowerShell.  
+The new default file is now 'production.json'.
+
 
 **To version 2021-07-08 and higher:**  
 Adjust URL to contain ```login_mode``` parameter to URL in configurations.
@@ -177,7 +188,7 @@ Settings are now available through `Get-iTopEnvironment` and `Set-iTopEnvironmen
 If you used the functions from previous versions of this module, it might be necessary to make some changes.  
 First of all: multiple environments are now supported (for instance: development and production).  
 There's now one .JSON file for each iTop environment.
-The default environment is named "default.json".
+The default environment is named "production.json".
 
 Furthermore, ```Remove-iTopLanguages``` is now named Remove-iTopLanguage for consistency reasons.
 

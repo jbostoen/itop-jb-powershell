@@ -55,6 +55,17 @@ $Environments | ForEach-Object {
 
 
 
+$Expression = "Add-Type -TypeDefinition @`"
+    public enum iTopEnvironment {
+$($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
+    }
+`"@"
+
+Invoke-Expression $Expression
+
+Write-host $expression
+
+
 # region Common
 
 	function Get-iTopCommand {
