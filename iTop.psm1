@@ -61,9 +61,8 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
     }
 `"@"
 
-Invoke-Expression $Expression
-
-Write-host $expression
+# To be implemented soon
+# Invoke-Expression $Expression
 
 
 # region Common
@@ -665,8 +664,8 @@ Write-host $expression
 		}
 
 
-		# Update any PHP file
-		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.php"
+		# Update any PHP or XML file
+		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.php,*.xml"
 
 		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 
