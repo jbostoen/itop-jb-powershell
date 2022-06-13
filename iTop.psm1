@@ -1,23 +1,47 @@
-# copyright   Copyright (C) 2019-2021 Jeffrey Bostoen
+# copyright   Copyright (C) 2019-2022 Jeffrey Bostoen
 # license     https://www.gnu.org/licenses/gpl-3.0.en.html
-# version     2021-03-10 10:36:00
+# version     2022-06-13 15:59:00
 
 # Variables
 
 # Read configuration from JSON-file.
-# Let's make it $global so it can easily be altered
-$Script:iTopEnvironments = @{}
+# Let's make it available in the entire scope of this module so it can easily be altered or used for different purposes.
+$Script:iTopEnvironments = [PSCustomObject]@{}
 
 
 If($PsISE) {
+
     # Workaround for PowerShell ISE
-    $EnvironmentPath = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\environments"
-    if((Test-Path -Path $EnvironmentPath) -eq $false) {
+    $Environments = @()
+    $Paths = @(
+        "$($env:USERPROFILE)\OneDrive\Documents\WindowsPowerShell\Modules\iTop\environments", 
+        "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\environments"
+    )
+
+
+    $Paths | ForEach-Object {
+
+        $EnvironmentPath = $_
+
+        if((Test-Path -Path $EnvironmentPath) -eq $true -And $Environments.Count -eq 0) {
+
+            $Environments = Get-ChildItem -Path $EnvironmentPath -Include "*.json" -Recurse
+            Write-Host $EnvironmentPath
+            return
+
+        }
+
+    }
+
+    if($Environments.Count -eq 0) {
+        
         Write-Host "Warning: no configuration of iTop environments found in $($EnvironmentPath)"
+
     }
-    else {
-        $Environments = Get-ChildItem -Path $EnvironmentPath -Include "*.json" -Recurse
-    }
+
+    
+    
+
 }
 Else {
     $Environments = Get-ChildItem -Path "$($PSScriptRoot)\environments" -Include "*.json" -Recurse
@@ -27,6 +51,10 @@ Else {
 $Environments | ForEach-Object {
 
 	$EnvName = $_.Name -Replace ".json", ""
+
+    If($EnvName -notmatch "^[A-Za-z0-9_]{1,}$" -or $EnvName -eq "default") {
+        Write-Error "Invalid name for JSON file: $($EnvName)"
+    }
 
 	$UnmodifiedSettings = ConvertFrom-JSON (Get-Content -Path $_.FullName -Raw)
     $SettingsJSON = Get-Content -Path $_.FullName -Raw
@@ -45,7 +73,7 @@ $Environments | ForEach-Object {
 	    
 	}
     
-    $Script:iTopEnvironments."$EnvName" = ConvertFrom-JSON $SettingsJSON
+    Add-Member -InputObject $Script:iTopEnvironments -NotePropertyName $EnvName -NotePropertyValue ($SettingsJSON | ConvertFrom-Json)
     
 
     
@@ -57,13 +85,21 @@ $Environments | ForEach-Object {
 
 $Expression = "Add-Type -TypeDefinition @`"
     public enum iTopEnvironment {
-$($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
-    }
+$($Script:iTopEnvironments.PSObject.Properties.Name -Join ",`n" | Out-String)}
 `"@"
 
-# To be implemented soon
-# Invoke-Expression $Expression
 
+try {
+
+    Invoke-Expression $Expression
+
+}  
+catch {
+
+    Write-Error "Invalid filename. Avoid using reserved words in PowerShell such as 'default'. Hint: the filename of your JSON file does not need to match the iTop environment's name."
+ 
+
+}
 
 # region Common
 
@@ -119,7 +155,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 	 2020-11-09: added function
 	#>
 		param(
-			[Parameter(Mandatory=$true)][String] $Environment,
+			[Parameter(Mandatory=$true)][iTopEnvironment] $Environment,
 			[Parameter(Mandatory=$true)][PSCustomObject] $Settings,
 			[Parameter(Mandatory=$false)][Boolean] $Persistent = $False
 		)
@@ -157,12 +193,12 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 	 2020-11-09: added function
 	#>
 		param(
-			[Parameter(Mandatory=$false)][AllowEmptyString()][String]$Environment = ""
+			[Parameter(Mandatory=$false)][iTopEnvironment]$Environment
 		)
 	 
 		$Environments = $Script:iTopEnvironments
 		
-		If($Environment -ne "") {
+		If($Environment -ne $null) {
 			$Environments = $Environments."$Environment"
 			
 			if($Environments -eq $null) {
@@ -200,14 +236,14 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 
 	 .Notes
 	 2019-08-18: added function
-	 2020-04-01: added parameter Environment (optional)
+	 2020-04-01: added parameter Environment (required)
 	 2021-02-04: added parameter Clean (optional)
 	 2021-09-02: added parameter Force (optional)
 	#>
 	function Install-iTopUnattended { 
 
 		param(
-			[Alias('env')][String] $Environment = "default",
+			[iTopEnvironment]$Environment,
 			[Switch] $Clean,
             [Switch] $Force
 		)
@@ -319,7 +355,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 	#>   
 		param(
 			[Boolean] $Loop = $False,
-			[Alias('env')][String] $Environment = "default"
+			[iTopEnvironment] $Environment
 		)
 
 		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
@@ -378,7 +414,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 	#>
 		param(
 			[Boolean] $Confirm = $False,
-			[Alias('env')][String] $Environment = "default"
+			[iTopEnvironment] $Environment 
 		)
 
 		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
@@ -444,10 +480,10 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 	 2020-04-01: added parameter Environment (optional)
 	#>
 		param(
-			[Parameter(Mandatory=$true)][String] $Name = 'new-name',
+			[Parameter(Mandatory=$true)][String] $Name,
 			[Parameter(Mandatory=$False)][String] $Description = '',
 			[Parameter(Mandatory=$False)][String] $Label = 'Group name: something',
-			[Alias('env')][String] $Environment = "default"
+			[iTopEnvironment] $Environment
 		)
 
 		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
@@ -544,7 +580,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 		param(
 			[Parameter(Mandatory=$true)][String] $From = '',
 			[Parameter(Mandatory=$true)][String] $To = '',
-			[Alias('env')][String] $Environment = "default"
+			[iTopEnvironment] $Environment
 		
 		)
 		
@@ -604,7 +640,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 	 2020-10-19: added parameter Folder (optional)
 	#>
 		param(
-			[Alias('env')][String] $Environment = "default",
+			[iTopEnvironment] $Environment,
 			[Parameter(Mandatory=$False)][String] $Folder = $null
 		)
 		
@@ -742,7 +778,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 	 2020-04-01: added parameter Environment (optional)
 	#>
 		param(
-			[Alias('env')][String] $Environment = "default"
+			[iTopEnvironment] $Environment
 		)
 
 		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
@@ -791,7 +827,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 	#>
         param(
 			[Parameter(Mandatory=$true)][Hashtable] $JsonData,
-            [Alias('env')][String] $Environment = "default"
+            [iTopEnvironment] $Environment
         )
 
   
@@ -874,7 +910,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 			[Parameter(Mandatory=$False)][String] $OutputFields = "",
 			[Parameter(Mandatory=$False)][Int64] $Limit = 0,
 			[Parameter(Mandatory=$False)][Int64] $Page = 1,
-			[Alias('env')][String] $Environment = "default"
+			[iTopEnvironment] $Environment
 		)
 		
 		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
@@ -982,7 +1018,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 			[Parameter(Mandatory=$true)][HashTable] $Fields = $Null,
 			[Parameter(Mandatory=$False)][String] $OutputFields = "",
 			[Parameter(Mandatory=$False)][String] $Comment = "",
-			[Alias('env')][String] $Environment = "default"
+			[iTopEnvironment] $Environment
 		)
 		
 		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
@@ -1097,7 +1133,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 			[Parameter(Mandatory=$False)][String] $OutputFields = "",
 			[Parameter(Mandatory=$False)][String] $Comment = "",
 			[Parameter(Mandatory=$False)][Boolean] $Batch = $False,
-			[Alias('env')][String] $Environment = "default"
+			[iTopEnvironment] $Environment
 		)
 		
 		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
@@ -1232,7 +1268,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 			[Parameter(Mandatory=$False)][String] $Class = "",
 			[Parameter(Mandatory=$False)][String] $Comment = "",
 			[Parameter(Mandatory=$False)][Boolean] $Batch = $False,
-			[Alias('env')][String] $Environment = "default"
+			[iTopEnvironment] $Environment
 		)
 		
 		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
@@ -1355,7 +1391,7 @@ $($Script:iTopEnvironments.Keys -Join ",`n" | Out-String)
 		param(
 			 [Parameter(Mandatory=$False)][Boolean]$Recurse = $true,
 			 [Parameter(Mandatory=$False)][String]$Class = "",
-			[Alias('env')][String] $Environment = "default"
+			[iTopEnvironment] $Environment
 		)
 
 		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
