@@ -248,7 +248,7 @@ catch {
             [Switch] $Force
 		)
 		
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
@@ -358,7 +358,7 @@ catch {
 			[iTopEnvironment] $Environment
 		)
 
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
@@ -417,7 +417,7 @@ catch {
 			[iTopEnvironment] $Environment 
 		)
 
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
@@ -486,7 +486,7 @@ catch {
 			[iTopEnvironment] $Environment
 		)
 
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
@@ -584,7 +584,7 @@ catch {
 		
 		)
 		
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
@@ -644,7 +644,7 @@ catch {
 			[Parameter(Mandatory=$False)][String] $Folder = $null
 		)
 		
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
@@ -781,7 +781,7 @@ catch {
 			[iTopEnvironment] $Environment
 		)
 
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
@@ -831,7 +831,7 @@ catch {
         )
 
   
-		    if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		    if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			    throw "iTop module: no configuration for environment '$($Environment)'"
 		    }
 		
@@ -913,7 +913,7 @@ catch {
 			[iTopEnvironment] $Environment
 		)
 		
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
@@ -1021,7 +1021,7 @@ catch {
 			[iTopEnvironment] $Environment
 		)
 		
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
@@ -1136,7 +1136,7 @@ catch {
 			[iTopEnvironment] $Environment
 		)
 		
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
@@ -1271,7 +1271,7 @@ catch {
 			[iTopEnvironment] $Environment
 		)
 		
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
@@ -1394,7 +1394,7 @@ catch {
 			[iTopEnvironment] $Environment
 		)
 
-		if($Script:iTopEnvironments.Keys -notcontains $Environment) {
+		if($Script:iTopEnvironments.PSObject.Properties.Name -notcontains $Environment) {
 			throw "iTop module: no configuration for environment '$($Environment)'"
 		}
 		
