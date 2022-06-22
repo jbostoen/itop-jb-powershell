@@ -164,6 +164,31 @@ Set-iTopObject -env "production" -key "SELECT Person WHERE org_id = 999" -Batch:
 ```
 
 
+Concrete example: imagine you want to create user accounts for every active person with a known e-mail address.  
+```
+# Retrieve all persons from the "personal" iTop environment
+$persons = Get-iTopObject -env personal -key "SELECT Person AS p WHERE p.id NOT IN (SELECT Person AS p2 JOIN UserLocal AS ul ON ul.contactid = p2.id) AND p.status = 'active' AND p.email != ''"
+
+# Create UserLocal account. 
+# The login name is the e-mail address, the password is set randomly and never expires. 
+# The user account is limited to the person's organization and receives 2 profiles (portal user, power portal user)
+$persons | ForEach-Object {
+
+	$f = $_.fields
+	
+	# Create a UserLocal object
+	New-iTopObject -env personal -Class "UserLocal" -Fields @{
+		"contactid"=$_.key;
+		"login"=$f.email;
+		"expiration"="never_expire";
+		"password"=(new-guid);
+		"profile_list"=@( @{"profileid"=2}, @{"profileid"=12} );
+		"allowed_org_list"=@( @{"allowed_org_id"=$f.org_id}  );
+	}
+
+}
+```
+
 ## Upgrade notes
 
 **To version 2022-06-07 and higher:**  
