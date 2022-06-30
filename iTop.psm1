@@ -751,6 +751,8 @@ catch {
 
 			$Content = Get-Content "$($_.Directory)\$($_.Name)"
 			$Content = $Content -Replace "Copyright \((C|c)\) (20[0-9]{2})((\-| \- )20[0-9]{2}).+?([A-Za-z0-9 \-]{1,})", "Copyright (c) `${2}-$($(Get-Date).ToString("yyyy")) `${5}"
+			$Content = $Content -Replace "Copyright \((C|c)\) (2019|202[01]).+?([A-Za-z0-9 \-]{1,})", "Copyright (c) `${2}-$($(Get-Date).ToString("yyyy")) `${3}"
+
 			$Content | Set-Content "$($_.Directory)\$($_.Name)"
 		}
 
