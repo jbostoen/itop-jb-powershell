@@ -649,111 +649,104 @@ catch {
 		}
 		
 		$EnvSettings = $Script:iTopEnvironments."$Environment"
-		$SExtensionPath = $EnvSettings.Extensions.Path
+		$sExtensionPath = $EnvSettings.Extensions.Path
 		
 		if($Folder -ne $null) {
 		
-			$SExtensionPath += "\" + $Folder
+			$sExtensionPath += "\" + $Folder
 			
 			# Check if specified folder exists in order to suppress further warnings
-			if((Test-Path -Path $SExtensionPath) -eq $False) {
-				throw "Extension path: folder does not exist: $($SExtensionPath)"
+			if((Test-Path -Path $sExtensionPath) -eq $False) {
+				throw "Extension path: folder does not exist: $($sExtensionPath)"
 			}
 		}
 		
-		$SVersionTimeStamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-		$SVersionExtensions = $($EnvSettings.Extensions.VersionMin -Replace "\.[0-9]$", "") + '.' + (Get-Date -Format "yyMMdd")
+		$sVersionTimeStamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+		$sVersionExtensions = $($EnvSettings.Extensions.VersionMin -Replace "\.[0-9]$", "") + '.' + (Get-Date -Format "yyMMdd")
 		
 		# Either add code to do more proper filtering or just make sure it's only applied to a subset of extenions.
-		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "datamodel.*.xml"
+		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse | Where-Object { $_.DirectoryName -notmatch '\\template$' }
 
-		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
-			$Content = Get-Content "$($_.Directory)\$($_.Name)"
+		$Files | Where-Object { $_.Name -eq "datamodel.*.xml" } | Foreach-Object {
+
+			$Content = Get-Content $_.FullName
 			$Content = $Content -Replace '<itop_design xmlns:xsi="http:\/\/www\.w3\.org\/2001\/XMLSchema-instance" version="1.[0-9]"', "<itop_design xmlns:xsi=`"http://www.w3.org/2001/XMLSchema-instance`" version=`"$($EnvSettings.Extensions.VersionDataModel)`"" 
-			$Content | Set-Content "$($_.Directory)\$($_.Name)"
+			$Content | Set-Content $_.FullName
+
 		}
 
-		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "extension.xml"
+		$Files | Where-Object { $_.Name -eq "extension.xml" } | Foreach-Object {
 
-		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
-			$Content = Get-Content "$($_.Directory)\$($_.Name)"
+			$Content = Get-Content $_.FullName
 			
 			# General iTop extension release info
-			$Content = $Content -Replace "<version>.*<\/version>", "<version>$($SVersionExtensions)</version>" 
+			$Content = $Content -Replace "<version>.*<\/version>", "<version>$($sVersionExtensions)</version>" 
 			$Content = $Content -Replace "<company>.*<\/company>", "<company>$($SCompany)</company>" 
 			$Content = $Content -Replace "<release_date>.*<\/release_date>", "<release_date>$(Get-Date -Format 'yyyy-MM-dd')</release_date>" 
 			$Content = $Content -Replace "<itop_version_min>.*<\/itop_version_min>", "<itop_version_min>$($EnvSettings.Extensions.VersionMin)</itop_version_min>"
 			
-			$Content | Set-Content "$($_.Directory)\$($_.Name)"
+			$Content | Set-Content $_.FullName
 			
 		}
 
 		# Update module files
-		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "module.*.php"
+		$Files | Where-Object { $_.Name -like  "module.*.php" } | Foreach-Object {
 
-		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
 			$Unused_but_surpress_output = $_.Name -match "^(.*)\.(.*)\.(.*)$"
 			$SModuleShortName = $Matches[2]; # magic
-			$Content = Get-Content "$($_.Directory)\$($_.Name)"
-			$Content = $Content -Replace "'$($SModuleShortName)\/(.*)',", "'$($SModuleShortName)/$($SVersionExtensions)',"
-			$Content | Set-Content "$($_.Directory)\$($_.Name)"
+			$Content = Get-Content $_.FullName
+			$Content = $Content -Replace "'$($SModuleShortName)\/(.*)',", "'$($SModuleShortName)/$($sVersionExtensions)',"
+			$Content | Set-Content $_.FullName
+
 		}
 
 
 		# Update any PHP or XML file
-		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.php,*.xml"
+		$Files | Where-Object { $_.Name -like "*.php" -Or $_.Name -like "*.xml" }| Foreach-Object {
 
-		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
-
-			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^([\s]{0,})\* @version([\s]{1,}).*", "`${1}* @version`${2}$($SVersionExtensions)"
+			$Content = Get-Content $_.FullName
+			$Content = $Content -Replace "^([\s]{0,})\* @version([\s]{1,}).*", "`${1}* @version`${2}$($sVersionExtensions)"
 			$Content = $Content -Replace "^([\s]{0,})\* @copyright([\s]{1,})Copyright \((C|c)\) (20[0-9]{2})(((\-| \- )20[0-9]{2})|).+?([A-Za-z0-9 \-]{1,})", "`${1}* @copyright`${2}Copyright (c) `${4}-$($(Get-Date).ToString("yyyy")) `${8}"
-			$Content | Set-Content "$($_.Directory)\$($_.Name)"
+			$Content | Set-Content $_.FullName
+
+
 		}
 		
 		
 		# Script files
 
 		# Update any BAT file
-		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.bat"
+		$Files | Where-Object { $_.Name -like "*.bat" } | Foreach-Object {
 
-		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
-
-			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^REM version[\s]{1,}.*", "REM version     $($SVersionTimeStamp)"			
-			$Content | Set-Content "$($_.Directory)\$($_.Name)"
+			$Content = Get-Content $_.FullName
+			$Content = $Content -Replace "^REM version[\s]{1,}.*", "REM version     $($sVersionTimeStamp)"			
+			$Content | Set-Content $_.FullName
 		}
 		
 		# Update any PS1/PSM1 file
-		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.ps1", "*.psm1"
+		$Files | Where-Object { $_.Name -like "*.ps1" -or $_.Name -like "*.psm1" } | Foreach-Object {
 
-		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
-
-			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($SVersionTimeStamp)"			
-			$Content | Set-Content "$($_.Directory)\$($_.Name)"
+			$Content = Get-Content $_.FullName
+			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($sVersionTimeStamp)"			
+			$Content | Set-Content $_.FullName
 		}
 
 		# Update any SH file
-		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.sh"
+		$Files | Where-Object { $_.Name -like "*.sh" } | Foreach-Object {
 
-		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
-
-			$Content = Get-Content "$($_.Directory)\$($_.Name)"			
-			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($SVersionTimeStamp)"			
-			$Content | Set-Content "$($_.Directory)\$($_.Name)"
+			$Content = Get-Content $_.FullName
+			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($sVersionTimeStamp)"			
+			$Content | Set-Content $_.FullName
 		}
 
-		# Update any MD file
-		$Files = Get-ChildItem -Path $SExtensionPath -File -Recurse -Include "*.md"
+		# Update any MarkDown (.md) file
+		$Files | Where-Object { $_.Name -like "*.md" } | Foreach-Object {
 
-		$Files | Where-Object { $_.DirectoryName -notmatch '\\template$' } | Foreach-Object {
-
-			$Content = Get-Content "$($_.Directory)\$($_.Name)"
+			$Content = Get-Content $_.FullName
 			$Content = $Content -Replace "Copyright \((C|c)\) (20[0-9]{2})((\-| \- )20[0-9]{2}).+?([A-Za-z0-9 \-]{1,})", "Copyright (c) `${2}-$($(Get-Date).ToString("yyyy")) `${5}"
 			$Content = $Content -Replace "Copyright \((C|c)\) (2019|202[012]) (.+|)?([A-Za-z0-9 \-]{1,})", "Copyright (c) `${2}-$($(Get-Date).ToString("yyyy")) `${3}" # Don't match if after the year a new year is specified
 
-			$Content | Set-Content "$($_.Directory)\$($_.Name)"
+			$Content | Set-Content $_.FullName
 		}
 
 	}
