@@ -638,6 +638,7 @@ catch {
 	 .Notes
 	 2020-04-01: added parameter Environment (optional)
 	 2020-10-19: added parameter Folder (optional)
+     2023-01-23: parameter Folder: if not specified, action must be confirmed now.
 	#>
 		param(
 			[iTopEnvironment] $Environment,
@@ -660,6 +661,14 @@ catch {
 				throw "Extension path: folder does not exist: $($sExtensionPath)"
 			}
 		}
+        else {
+
+            $confirmation = Read-Host "Warning: no specific subfolder specified. If you are sure you want to continue, enter Y"
+            if ($confirmation -ne "y") {
+                exit
+            }
+
+        }
 		
 		$sVersionTimeStamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 		$sVersionExtensions = $($EnvSettings.Extensions.VersionMin -Replace "\.[0-9]$", "") + '.' + (Get-Date -Format "yyMMdd")
