@@ -1,6 +1,6 @@
 # PSM1 iTop module for PowerShell
 
-Copyright (C) 2019-2022 Jeffrey Bostoen
+Copyright (C) 2019-2023 Jeffrey Bostoen
 
 [![License](https://img.shields.io/github/license/jbostoen/iTop-custom-extensions)](https://github.com/jbostoen/iTop-custom-extensions/blob/master/license.md)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/jbostoen)
@@ -62,6 +62,7 @@ All other settings are primarily when you have iTop installed on the same machin
 
 **Variables**: any key you define here, can be used as a variable (%name%) in the other parts of the configuration. Strings only for now.
 
+
 ```
 {
 
@@ -113,10 +114,26 @@ All other settings are primarily when you have iTop installed on the same machin
 
 ```
 
+In later versions, inheriting is possible. Point to another environment to inherit all of the above settings, and just change whatever needs to be altered.
+Use **InheritFrom** and specify the name of the environment.
+
+```
+{
+	"InheritFrom": "someOtherEnvironmentName",
+	"Variables": {
+		"Environment": "production",
+	}
+	
+}
+
+```
+
+
+
 
 ## Basic examples
 
-You can execute for example `Get-Help Get-iTopobject` to get a full list and explanation of each parameter.
+For example, execute `Get-Help Get-iTopobject` to get a full list and explanation of each parameter.
 
 Mind that the structure is based on [iTop's REST/JSON API](https://www.itophub.io/wiki/page?id=latest%3Aadvancedtopics%3Arest_json).   
 
@@ -153,7 +170,7 @@ Set-iTopObject -env "production" -key "SELECT Organization WHERE id = 1" -Fields
 }
 ```
 
-Mind that by default, iTop will currently not allow you to update/delete multiple objects at once.  
+By default, iTop will currently not allow to update/delete multiple objects at once.  
 There must be one HTTP request per update/delete. To facilitate this, a `-Batch:$true` parameter exists.
 
 Updating an organization for multiple persons.
@@ -164,7 +181,7 @@ Set-iTopObject -env "production" -key "SELECT Person WHERE org_id = 999" -Batch:
 ```
 
 
-Concrete example: imagine you want to create user accounts for every active person with a known e-mail address.  
+Concrete example: create user accounts for every active person with an e-mail address.  
 ```
 # Retrieve all persons from the "personal" iTop environment
 $persons = Get-iTopObject -env personal -key "SELECT Person AS p WHERE p.id NOT IN (SELECT Person AS p2 JOIN UserLocal AS ul ON ul.contactid = p2.id) AND p.status = 'active' AND p.email != ''"

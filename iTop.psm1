@@ -1,6 +1,6 @@
-# copyright   Copyright (C) 2019-2022 Jeffrey Bostoen
+# copyright   Copyright (C) 2019-2023 Jeffrey Bostoen
 # license     https://www.gnu.org/licenses/gpl-3.0.en.html
-# version     2022-06-13 15:59:00
+# version     2023-03-10 14:03:00
 
 # Variables
 
@@ -47,6 +47,17 @@ Else {
     $Environments = Get-ChildItem -Path "$($PSScriptRoot)\environments" -Include "*.json" -Recurse
 }
 
+function merge ($target, $source) {
+    $source.psobject.Properties | % {
+        if ($_.TypeNameOfValue -eq 'System.Management.Automation.PSCustomObject' -and $target."$($_.Name)" ) {
+            merge $target."$($_.Name)" $_.Value
+        }
+        else {
+            $target | Add-Member -MemberType $_.MemberType -Name $_.Name -Value $_.Value -Force
+        }
+    }
+}
+
 # Perform actions on several environments
 $Environments | ForEach-Object {
 
@@ -56,14 +67,35 @@ $Environments | ForEach-Object {
         Write-Error "Invalid name for JSON file: $($EnvName)"
     }
 
-	$UnmodifiedSettings = ConvertFrom-JSON (Get-Content -Path $_.FullName -Raw)
     $SettingsJSON = Get-Content -Path $_.FullName -Raw
+    $UnmodifiedSettings = $SettingsJSON | ConvertFrom-Json
     
-    If($UnmodifiedSettings.Variables -ne $null) {
+    # Inheritance
+    If($UnmodifiedSettings.PSObject.Properties.Name -contains "InheritFrom") {
+
+        $ParentJSON = Get-Content -Path "$($_.DirectoryName)\$($UnmodifiedSettings.InheritFrom).json"
+        $ParentSettings = $ParentJSON | ConvertFrom-Json
+        $FinalSettings = $ParentSettings
+
+        merge $FinalSettings $UnmodifiedSettings
+
+        $SettingsJSON = $FinalSettings | ConvertTo-Json
+
+
+    }
+    else {
+
+        $FinalSettings = $UnmodifiedSettings
+
+    }
+
+
+    # Replace variables
+    If($FinalSettings.Variables -ne $null) {
 
 
         # Replace variables
-        $UnmodifiedSettings.Variables.PSObject.Properties | ForEach-Object {
+        $FinalSettings.Variables.PSObject.Properties | ForEach-Object {
         
             # Still needs to be converted to JSON, so escape backslash again
             $SettingsJSON = $SettingsJSON -Replace "%$($_.Name)%", $($_.Value -replace "\\", "\\")
@@ -72,6 +104,7 @@ $Environments | ForEach-Object {
 
 	    
 	}
+
     
     Add-Member -InputObject $Script:iTopEnvironments -NotePropertyName $EnvName -NotePropertyValue ($SettingsJSON | ConvertFrom-Json)
     
@@ -181,10 +214,10 @@ catch {
 	function Get-iTopEnvironment {
 	<#
 	 .Synopsis
-	 Create/edit an iTop environment in the current session
+	 Get iTop environment settings in the current session
 	 
 	 .Description
-	 Create/edit an iTop environment in the current session
+	 Get iTop environment settings in the current session
 	 
 	 .Parameter Environment
 	 Optional. If specified, only this environment will be returned.
