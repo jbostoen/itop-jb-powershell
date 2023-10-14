@@ -18,34 +18,38 @@ If($PsISE) {
         "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\environments"
     )
 
+}
+else {
 
-    $Paths | ForEach-Object {
+    $Paths = @(
+        "$($PSScriptRoot)\environments"
+    )
 
-        $EnvironmentPath = $_
+}
 
-        if((Test-Path -Path $EnvironmentPath) -eq $true -And $Environments.Count -eq 0) {
 
-            $Environments = Get-ChildItem -Path $EnvironmentPath -Include "*.json" -Recurse
-            Write-Host $EnvironmentPath
-            return
+$Paths | ForEach-Object {
 
-        }
+    $EnvironmentPath = $_
+
+    if((Test-Path -Path $EnvironmentPath) -eq $true -And $Environments.Count -eq 0) {
+
+        $Environments = Get-ChildItem -Path $EnvironmentPath -Include "*.json" -Recurse
+        Write-Host $EnvironmentPath
+        return
 
     }
 
-    if($Environments.Count -eq 0) {
+}
+
+
+
+if($Environments.Count -eq 0) {
         
-        Write-Host "Warning: no configuration of iTop environments found in $($EnvironmentPath)"
-
-    }
-
-    
-    
+    Write-Host "Warning: iTop module loaded, but no configuration of iTop environments found in:`n$($Paths -Join ",`n")" -ForegroundColor Yellow
 
 }
-Else {
-    $Environments = Get-ChildItem -Path "$($PSScriptRoot)\environments" -Include "*.json" -Recurse
-}
+
 
 function merge ($target, $source) {
     $source.psobject.Properties | % {
