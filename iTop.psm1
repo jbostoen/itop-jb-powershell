@@ -67,6 +67,8 @@ $Environments | ForEach-Object {
 
 	$EnvName = $_.Name -Replace ".json", ""
 
+    # The environment name must be compatible with values in a PowerShell enum.
+    # For that reason, unfortunately for example hyphens are not allowed.
     If($EnvName -notmatch "^[A-Za-z0-9_]{1,}$" -or $EnvName -eq "default") {
         Write-Error "Invalid name for JSON file: $($EnvName)"
     }
@@ -133,7 +135,7 @@ try {
 }  
 catch {
 
-    Write-Error "Invalid filename. Avoid using reserved words in PowerShell such as 'default'. Hint: the filename of your JSON file does not need to match the iTop environment's name."
+    Write-Error "Invalid filename for one of the environment files. Avoid using reserved words in PowerShell such as 'default'. Hint: the filename of your JSON file does not need to match the iTop environment's name."
  
 
 }
@@ -790,7 +792,7 @@ catch {
 
 			$Content = Get-Content $_.FullName
 			$Content = $Content -Replace "Copyright \((C|c)\) (20[0-9]{2})((\-| \- )20[0-9]{2}).+?([A-Za-z0-9 \-]{1,})", "Copyright (c) `${2}-$($(Get-Date).ToString("yyyy")) `${5}"
-			$Content = $Content -Replace "Copyright \((C|c)\) (2019|202[012]) (.+|)?([A-Za-z0-9 \-]{1,})", "Copyright (c) `${2}-$($(Get-Date).ToString("yyyy")) `${3}" # Don't match if after the year a new year is specified
+			$Content = $Content -Replace "Copyright \((C|c)\) (2019|202[\d]) (.+|)?([A-Za-z0-9 \-]{1,})", "Copyright (c) `${2}-$($(Get-Date).ToString("yyyy")) `${3}" # Don't match if after the year a new year is specified
 
 			$Content | Set-Content $_.FullName
 		}
@@ -1406,10 +1408,10 @@ catch {
 
 	<#
 	 .Synopsis
-	 Gets iTop classes from datamodel-production.xml
+	 Gets iTop classes from datamodel-xxx.xml
 
 	 .Description
-	 Gets iTop classes from datamodel-production.xml
+	 Gets iTop classes from datamodel-xxx.xml
 	 
 	 .Parameter Class
 	 Get specific class
