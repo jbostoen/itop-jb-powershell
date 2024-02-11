@@ -10,7 +10,9 @@ Hint: you can make sure this module is always loaded by default.
 
 # Configuration example
 
-You can add more environments by adding an '**<environment-name>**.json' file in `%UserProfile%\Documents\WindowsPowerShell\Modules\iTop\environments`
+You can add more environments by adding an '**<environment-name>**.json' file in `<Powershell module directory>\iTop\environments` .
+For PowerShell 5.x, this is likely `%UserProfile%\Documents\WindowsPowerShell\Modules\iTop\environments` .
+For PowerShell 7.x, this is likely `%UserProfile%\Documents\PowerShell\Modules\iTop\environments` .
 
 ⚠ To be future proof: only use alphabetical characters, numbers or underscores in the filenames.  
 Some words are reserved words in PowerShell, so this module will not use "default.json" as a name anymore.

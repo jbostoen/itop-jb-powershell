@@ -1,4 +1,4 @@
-# copyright   Copyright (C) 2019-2023 Jeffrey Bostoen
+# copyright   Copyright (C) 2019-2024 Jeffrey Bostoen
 # license     https://www.gnu.org/licenses/gpl-3.0.en.html
 # version     2023-03-10 14:03:00
 
@@ -14,8 +14,13 @@ If($PsISE) {
     # Workaround for PowerShell ISE
     $Environments = @()
     $Paths = @(
+		# PowerShell 5.x
         "$($env:USERPROFILE)\OneDrive\Documents\WindowsPowerShell\Modules\iTop\environments", 
-        "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\environments"
+        "$($env:USERPROFILE)\OneDrive\Documents\WindowsPowerShell\Modules\iTop\environments", 
+        "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\environments",
+		# PowerShell 7.x
+        "$($env:USERPROFILE)\OneDrive\Documents\PowerShell\Modules\iTop\environments", 
+        "$($env:USERPROFILE)\Documents\PowerShell\Modules\iTop\environments",
     )
 
 }
@@ -537,11 +542,12 @@ catch {
 			throw "The extension's name preferably starts with an alphabetical character. Furthermore, it preferably consists of alphanumerical characters or hyphens (-) only."
 		}
 
-		$Extension_Source = "$($Env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\data\template"
+		$Extension_Source = "$PSScriptRoot\data\template"
 		$Extension_Destination = "$($EnvSettings.Extensions.Path)\$($Name)"
 
 		# Prevent issues with copy-item, running second time
 		If( (Test-Path -Path $Extension_Source) -eq $false ) {
+throw "$PSScriptRoot"
 			throw "The source folder $($Extension_Source) does not exist. So there is no template available."
 		}
 		
@@ -787,8 +793,8 @@ catch {
 			$Content | Set-Content $_.FullName
 		}
 
-		# Update any MarkDown (.md) file
-		$Files | Where-Object { $_.Name -like "*.md" } | Foreach-Object {
+		# Update any MarkDown (.md) or Twig file
+		$Files | Where-Object { $_.Name -like "*.md" -or $_.Name -like "*.twig" } | Foreach-Object {
 
 			$Content = Get-Content $_.FullName
 			$Content = $Content -Replace "Copyright \((C|c)\) (20[0-9]{2})((\-| \- )20[0-9]{2}).+?([A-Za-z0-9 \-]{1,})", "Copyright (c) `${2}-$($(Get-Date).ToString("yyyy")) `${5}"
