@@ -20,7 +20,7 @@ If($PsISE) {
         "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\environments",
 		# PowerShell 7.x
         "$($env:USERPROFILE)\OneDrive\Documents\PowerShell\Modules\iTop\environments", 
-        "$($env:USERPROFILE)\Documents\PowerShell\Modules\iTop\environments",
+        "$($env:USERPROFILE)\Documents\PowerShell\Modules\iTop\environments"
     )
 
 }
