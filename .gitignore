@@ -1,2 +1,2 @@
-environments/
-!environments/production.json
+iTop.environments/environments/
+!iTop.environments/environments/production.json

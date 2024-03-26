@@ -20,9 +20,9 @@ Trivia: this is my very first PowerShell module ever.
 
 ## Documentation
 
-* [Overview of cmdlets](docs/overview_cmdlets.md) - Overview of the available cmdlets.
-* [Installation and configuration](docs/installation_and_configuration.md) - Installation and configuration.
-* [Upgrade notes](docs/upgrade_notes.md) - For those coming from an older version.
-* [Cmdlets examples](docs/cmdlets_examples.md) - Some examples.
+* [Overview of cmdlets](iTop.Docs/overview_cmdlets.md) - Overview of the available cmdlets.
+* [Installation and configuration](iTop.Docs/installation_and_configuration.md) - Installation and configuration.
+* [Cmdlets examples](iTop.Docs/cmdlets_examples.md) - Some examples.
+* [Upgrade notes](iTop.Docs/upgrade_notes.md) - For those coming from an older version.
 
 
