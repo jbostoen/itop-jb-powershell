@@ -16,7 +16,7 @@
 	 Switch. Installs clean environment. Warning: drops database!
 
 	 .Parameter Force
-	 Switch. Forces removal of .maintenance and .readonly files if present (which block new setup executions).
+	 Switch. Forces removal of .maintenance and .readonly files if present (which block new setup executions), unsets read-only flag of configuration file.
 	 
 	 .Example
 	 Install-iTopUnattended
@@ -120,7 +120,7 @@
 
 		If((Test-Path -Path $EnvSettings.App.ConfigFile) -eq $True) {
 			Get-Item -Path $EnvSettings.App.ConfigFile | Set-ItemProperty -Name IsReadOnly -Value $False
-			Write-Host "Unset read-only flag on iTop configuration file ($($EnvSettings.App.ConfigFile))"
+			Write-Host "Unsetting the read-only flag of the iTop configuration file ($($EnvSettings.App.ConfigFile))"
 		}
 		Else {
 			Write-Warning "iTop configuration file not found: ($($EnvSettings.App.ConfigFile))"
