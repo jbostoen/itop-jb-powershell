@@ -47,7 +47,11 @@ Here is a full example.
 		// More info: https://www.itophub.io/wiki/page?id=latest:advancedtopics:rest_json
 		"API": {
 			// The iTop REST/JSON API endpoint URL.
-			// Explicitly add login_mode=url (URL parameters such as auth_user and auth_pwd will be added) or login_mode=basic (HTTP Basic Authentication will be used).
+			// Explicitly add the login mode.
+			// Currently supports:
+			// login_mode=url (URL parameters such as auth_user and auth_pwd will be added)
+			// login_mode=basic (HTTP Basic Authentication will be used)
+			// login_mode=token (iTop application token will be used)
 			"Url":  "http://127.0.0.1/itop/web/webservices/rest.php?login_mode=url",
 			// Version of the iTop API.
 			"Version":  "1.3",
@@ -55,6 +59,8 @@ Here is a full example.
 			// Mind that for now, the module uses the configured URL to determine how to authenticate.
 			"User":  "admin",
 			"Password":  "admin",
+			// Or alternatively, use an application token:
+			"Token": "iTopApplicationToken",
 			// Specify the default output. '*' means all attributes of the queried class, '*+' means all attributes of the object's class.
 			// For example, if tickets are queried, '*' would return all the attributes which are defined for the ticket class.
 			// However, tickets could include changes, incidents, user requests, ... . Those classes each have some unique attributes. '*+' would expose those attributes in the result.

@@ -29,6 +29,7 @@ The most important limitation is that with each HTTP request, only one object ca
 * `New-iTopObject`: Create 1 iTop object (core/create).
 * `Remove-iTopObject`: Delete iTop object(s) (core/delete).
 * `Set-iTopObject`: Update iTop object(s) (core/update).
+* `Test-iTopCredential`: Tests user credentials (core/check_credentials). Does not work for application tokens.
 
 
 **iTop.Local**

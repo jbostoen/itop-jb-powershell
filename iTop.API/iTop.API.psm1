@@ -30,27 +30,50 @@ function Invoke-iTopRestMethod {
         )
 
 		    $EnvSettings = Get-iTopEnvironment -Environment $Environment
-
-		    $ArgData = @{
-			    "version" = $EnvSettings.API.Version;
-			    "auth_user" = $EnvSettings.API.User;
-			    "auth_pwd" = $EnvSettings.API.Password;
-			    "json_data" = (ConvertTo-JSON $JsonData -Depth 10)
-		    }
 		
 		    # $SecurePassword = ConvertTo-SecureString $EnvSettings.API.Password -AsPlainText -Force
 		    # $Credential = New-Object System.Management.Automation.PSCredential($EnvSettings.API.User, $SecurePassword)
 
             Switch -Regex ($EnvSettings.API.Url) {
                 "login_mode=url" {
+					
+					$ArgData = @{
+						"version" = $EnvSettings.API.Version;
+						"auth_user" = $EnvSettings.API.User;
+						"auth_pwd" = $EnvSettings.API.Password;
+						"json_data" = (ConvertTo-JSON $JsonData -Depth 10)
+					}
+
                     $Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache"}
                     break
                 }
                 "login_mode=basic" {
+					
+					$ArgData = @{
+						"version" = $EnvSettings.API.Version;
+						"json_data" = (ConvertTo-JSON $JsonData -Depth 10)
+					}
+
                     # Only in PowerShell 6 there seems to be support for -Authentication Basic
                     # For Basic Authentication:
                     $Base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $EnvSettings.API.User,$EnvSettings.API.Password)))
-                    $Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache";"Authorization"=("Basic {0}" -f $Base64AuthInfo)}
+                    $Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{
+						"Cache-Control"="no-cache";
+						"Authorization"=("Basic {0}" -f $Base64AuthInfo)
+					}
+                    break
+                }
+                "login_mode=token" {
+					
+					$ArgData = @{
+						"version" = $EnvSettings.API.Version;
+						"json_data" = (ConvertTo-JSON $JsonData -Depth 10);
+					}
+
+                    $Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{
+						"Cache-Control"="no-cache";
+						"Auth-Token"=$EnvSettings.API.Token
+					}
                     break
                 }
                 default {
@@ -62,6 +85,49 @@ function Invoke-iTopRestMethod {
 
     }
 
+	function Test-iTopCredential {
+		<#
+		 .Synopsis
+		 Uses iTop REST/JSON API to test the configured credentials. Works only for username/password, not for tokens.
+	
+		 .Description
+		 Uses iTop REST/JSON API to test the configured credentials. Works only for username/password, not for tokens.
+		 
+		 .Parameter Environment
+		 Environment name.
+		 
+		 .Example
+		 Test-iTopCredential -Environment SomeEnv
+		#>
+			param(
+				[iTopEnvironment] $Environment
+			)
+
+			$EnvSettings = Get-iTopEnvironment -Environment $Environment
+			
+			$JsonData = @{
+				"operation"='core/check_credentials';
+				"user"=$EnvSettings.API.User;
+				"password"=$EnvSettings.API.Password;
+			};
+			
+			$Content = Invoke-iTopRestMethod -Environment $Environment -JsonData $JsonData
+	
+			# iTop API did not return an error
+			If($null -eq $Content.code) {
+				throw "iTop API did not return expected data: $($Content)"
+			}
+			ElseIf($Content.code -eq 0) {
+				
+				return $Content
+			
+			}
+			# iTop API did return an error
+			else {
+				throw "iTop API returned an error: $($Content.code) - $($Content.message)"
+			}
+			
+		}
 
 	function Get-iTopObject {
 	<#
