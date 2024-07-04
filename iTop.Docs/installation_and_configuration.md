@@ -23,7 +23,7 @@ Some words are reserved words in PowerShell, so this module will not use "defaul
 
 All other settings are primarily relevant when you have iTop installed on the same machine as where you are running the PowerShell module on.
 
-Here is a full example.
+Here is a full example. Remove all comments (prefixed by //)!
 
 ```
 {
@@ -39,7 +39,7 @@ Here is a full example.
 	// For example, here a variable 'Environment' (can be anything, as long as it's a valid JSON property name) is configured and its value is set to 'production'.
 	// In other settings, whenever %Environment% is used somewhere, it will be replaced with 'production'.
 	"Variables": {
-		"Environment": "production",
+		"Environment": "production"
 	},
 		
 	// This section below is only relevant when using the iTop.API PowerShell module.
