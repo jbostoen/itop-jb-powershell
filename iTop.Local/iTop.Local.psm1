@@ -1,4 +1,4 @@
-
+Using module iTop.Environments
 
 #region Functions which can be used when iTop is installed locally.
 
@@ -25,7 +25,7 @@
 	function Install-iTopUnattended { 
 
 		param(
-			[iTopEnvironment][Parameter(Mandatory=$true)][String] $Environment,
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment,
 			[Switch] $Clean,
             [Switch] $Force
 		)
@@ -111,7 +111,7 @@
 
 	#>   
 		param(
-			[iTopEnvironment][Parameter(Mandatory=$true)][String] $Environment
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
 		)
 		
 		$EnvSettings = Get-iTopEnvironment -Environment $Environment
@@ -164,7 +164,7 @@
 	#>
 		param(
 			[Boolean] $Confirm = $False,
-			[iTopEnvironment] $Environment 
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
 		)
 
 		$EnvSettings = Get-iTopEnvironment -Environment $Environment
@@ -231,7 +231,7 @@
 			[Parameter(Mandatory=$true)][String] $Name,
 			[Parameter(Mandatory=$False)][String] $Description = '',
 			[Parameter(Mandatory=$False)][String] $Label = 'Category name: Some short name',
-			[iTopEnvironment] $Environment
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
 		)
 
 		$EnvSettings = Get-iTopEnvironment -Environment $Environment
@@ -321,7 +321,7 @@
 		param(
 			[Parameter(Mandatory=$true)][String] $From,
 			[Parameter(Mandatory=$true)][String] $To,
-			[iTopEnvironment] $Environment
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
 		
 		)
 		
@@ -375,7 +375,7 @@
 
 	#>
 		param(
-			[iTopEnvironment] $Environment,
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment,
 			[Parameter(Mandatory=$False)][String] $Folder = $null
 		)
 		
@@ -510,7 +510,7 @@
 
 	#>
 		param(
-			[iTopEnvironment] $Environment
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
 		)
 
 		$EnvSettings = Get-iTopEnvironment -Environment $Environment
@@ -562,7 +562,7 @@
 		param(
 			 [Parameter(Mandatory=$False)][Boolean]$Recurse = $true,
 			 [Parameter(Mandatory=$False)][String]$Class = "",
-			[iTopEnvironment] $Environment
+			 [Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
 		)
 
 		$EnvSettings = Get-iTopEnvironment -Environment $Environment

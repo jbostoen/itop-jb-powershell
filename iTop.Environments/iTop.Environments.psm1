@@ -68,9 +68,10 @@ $Environments | ForEach-Object {
 
 	$EnvName = $_.Name -Replace ".json", ""
 
-    # The environment name must be compatible with values in a PowerShell enum.
-    # For that reason, unfortunately for example hyphens are not allowed.
-    If($EnvName -notmatch "^[A-Za-z0-9_]{1,}$" -or $EnvName -eq "default") {
+    # Previously, the environment name had to be compatible with values in a PowerShell enum.
+    # For that reason, hyphens were not allowed.
+	# While this current filter below may still be too strict, it allows for basic names.
+    If($EnvName -notmatch "^[A-z][A-Za-z0-9_\-]{0,}$" -or $EnvName -eq "default") {
         Write-Error "Invalid name for JSON file: $($EnvName)"
     }
 
@@ -112,7 +113,6 @@ $Environments | ForEach-Object {
 	    
 	}
 
-    
     Add-Member -InputObject $Script:iTopEnvironments -NotePropertyName $EnvName -NotePropertyValue ($SettingsJSON | ConvertFrom-Json)
     
 
@@ -121,12 +121,16 @@ $Environments | ForEach-Object {
 
 }
 
+Class iTopEnvironment : System.Management.Automation.IValidateSetValuesGenerator {
+    
+	[string[]] GetValidValues() {
+		
+		$environmentNames = $Script:iTopEnvironments.PSObject.Properties.Name
+        return [string[]] $environmentNames
 
+	}
 
-$Expression = "Add-Type -TypeDefinition @`"
-    public enum iTopEnvironment {
-$($Script:iTopEnvironments.PSObject.Properties.Name -Join ",`n" | Out-String)}
-`"@"
+}
 
 
 try {
@@ -163,7 +167,7 @@ catch {
 	 
 	#>
 		param(
-			[Parameter(Mandatory=$true)][iTopEnvironment] $Environment,
+			[Parameter(Mandatory=$true)][ValidateSet([iTopEnvironment])][string] $Environment,
 			[Parameter(Mandatory=$true)][PSCustomObject] $Settings,
 			[Parameter(Mandatory=$false)][Boolean] $Persistent = $False
 		)
@@ -199,7 +203,7 @@ catch {
 	 
 	#>
 		param(
-			[Parameter(Mandatory=$false)][iTopEnvironment]$Environment
+			[Parameter(Mandatory=$false)][ValidateSet([iTopEnvironment])][string] $Environment
 		)
 	 
 		$Environments = $Script:iTopEnvironments

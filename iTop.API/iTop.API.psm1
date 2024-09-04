@@ -1,7 +1,7 @@
 # copyright   Copyright (C) 2019-2024 Jeffrey Bostoen
 # license     https://www.gnu.org/licenses/gpl-3.0.en.html
-# version     2023-03-10 14:03:00
 
+Using module iTop.Environments
 
 #region cmdlets to interact with the iTop REST/JSON API
 
@@ -26,7 +26,7 @@ function Invoke-iTopRestMethod {
 	#>
         param(
 			[Parameter(Mandatory=$true)][Hashtable] $JsonData,
-            [iTopEnvironment] $Environment
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
         )
 
 		    $EnvSettings = Get-iTopEnvironment -Environment $Environment
@@ -100,7 +100,7 @@ function Invoke-iTopRestMethod {
 		 Test-iTopCredential -Environment SomeEnv
 		#>
 			param(
-				[iTopEnvironment] $Environment
+				[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
 			)
 
 			$EnvSettings = Get-iTopEnvironment -Environment $Environment
@@ -160,9 +160,7 @@ function Invoke-iTopRestMethod {
 	 
 	 .Example
 	 Get-iTopObject -key "SELECT UserRequest" -OutputFields "id,ref,title".
-
-	 .Notes
-	 2020-04-01: added parameter Environment (optional).
+	 
 	#>
 		param(
 			[Parameter(Mandatory=$true)][String] $Key,
@@ -170,7 +168,7 @@ function Invoke-iTopRestMethod {
 			[Parameter(Mandatory=$False)][String] $OutputFields = "",
 			[Parameter(Mandatory=$False)][Int64] $Limit = 0,
 			[Parameter(Mandatory=$False)][Int64] $Page = 1,
-			[iTopEnvironment] $Environment
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
 		)
 		
 		$EnvSettings = Get-iTopEnvironment -Environment $Environment
@@ -266,15 +264,13 @@ function Invoke-iTopRestMethod {
 	 .Example
 	 New-iTopObject -class "UserRequest" -Fields @{'title'='something', 'description'='some description', 'caller_id'="SELECT Organization WHERE name = 'demo'", 'org_id'=1} -OutputFields "*"
 
-	 .Notes
-	 2020-04-01: added parameter Environment (optional).
 	#>
 		param(
 			[Parameter(Mandatory=$true)][String] $Class,
 			[Parameter(Mandatory=$true)][HashTable] $Fields,
 			[Parameter(Mandatory=$False)][String] $OutputFields = "",
 			[Parameter(Mandatory=$False)][String] $Comment = "",
-			[iTopEnvironment] $Environment
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
 		)
 		
 		$EnvSettings = Get-iTopEnvironment -Environment $Environment
@@ -374,9 +370,6 @@ function Invoke-iTopRestMethod {
 	 .Example
 	 Set-iTopObject -Key 1 -Class "UserRequest" -Fields @{'title'='something', 'description'='some description', 'caller_id'="SELECT Organization WHERE name = 'demo'", 'org_id'=1} -OutputFields "*"
 
-	 .Notes
-	 2020-04-01: added parameter Environment (optional).
-	 2020-05-14: added parameter Batch (optional) - boolean to allow batch updates through PowerShell.
 	#>
 		param(
 			[Parameter(Mandatory=$true)][String] $Key,
@@ -385,7 +378,7 @@ function Invoke-iTopRestMethod {
 			[Parameter(Mandatory=$False)][String] $OutputFields = "",
 			[Parameter(Mandatory=$False)][String] $Comment = "",
 			[Parameter(Mandatory=$False)][Boolean] $Batch = $False,
-			[iTopEnvironment] $Environment
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
 		)
 		
 		$EnvSettings = Get-iTopEnvironment -Environment $Environment
@@ -507,16 +500,13 @@ function Invoke-iTopRestMethod {
 	 .Example
 	 Remove-iTopObject -key 1 -class "UserRequest".
 
-	 .Notes
-	 2020-04-01: added parameter Environment (optional).
-	 2020-05-14: added parameter Batch (optional) - boolean to allow batch deleting through PS1.
 	#>
 		param(
 			[Parameter(Mandatory=$true)][String] $Key,
 			[Parameter(Mandatory=$False)][String] $Class = "",
 			[Parameter(Mandatory=$False)][String] $Comment = "",
 			[Parameter(Mandatory=$False)][Boolean] $Batch = $False,
-			[iTopEnvironment] $Environment
+			[Parameter(Mandatory=$True)][ValidateSet([iTopEnvironment])][string] $Environment
 		)
 		
 		$EnvSettings = Get-iTopEnvironment -Environment $Environment
