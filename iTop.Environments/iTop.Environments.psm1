@@ -133,17 +133,6 @@ Class iTopEnvironment : System.Management.Automation.IValidateSetValuesGenerator
 }
 
 
-try {
-
-    Invoke-Expression $Expression
-
-}  
-catch {
-
-    Write-Error "Invalid filename for one of the environment files. Avoid using reserved words in PowerShell such as 'default'. Hint: the filename of your JSON file does not need to match the iTop environment's name."
- 
-
-}
 
 #region iTop environments
 
