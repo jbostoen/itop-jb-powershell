@@ -567,7 +567,7 @@ Using module iTop.Environments
 
 		$EnvSettings = Get-iTopEnvironment -Environment $Environment
 		
-		[Xml]$xmlDoc = Get-Content ($EnvSettings.App.Path + "\data\datamodel-production.xml")
+		[Xml]$xmlDoc = Get-Content ($EnvSettings.App.Path + "\data\datamodel-$($EnvSettings.variables.Environment).xml")
 		return (Get-iTopClassFromNode -Recurse $Recurse -XmlNode $xmlDoc.itop_design.classes.class -class $Class)
 
 	}
