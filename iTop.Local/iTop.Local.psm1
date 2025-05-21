@@ -69,10 +69,10 @@ Using module iTop.Environments
 		
 		
 		If($Clean.IsPresent) {
-            $Cmd = "$($PhpExe) $($InstallScript) --response_file=$($InstallXML) --clean=1";
+            $Cmd = "$($PhpExe) $($InstallScript) --response_file=$($InstallXML) --clean=1"
 		}
         Else {
-            $Cmd = "$($PhpExe) $($InstallScript) --response_file=$($UpgradeXML)";
+            $Cmd = "$($PhpExe) $($InstallScript) --response_file=$($UpgradeXML)"
         }
 		
 		Write-Host "Start: $((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))"
@@ -224,7 +224,7 @@ Using module iTop.Environments
 	 Specify a label. This is the title of the extension.
 
 	 .Example
-	 New-iTopExtension 
+	 New-iTopExtension -Name "some-folder" -Label "Datamodel: Customizations for ClientName" -Description "This extension does ..." -Environment "my-env"
 
 	#>
 		param(
@@ -259,35 +259,35 @@ Using module iTop.Environments
 		Copy-Item -Path $Extension_Source -Destination $Extension_Destination -Recurse -Container 
 
 		# Rename some files
-		$Files = Get-ChildItem -Path $Extension_Destination
+		$Files = Get-ChildItem -Path $Extension_Destination -File -Recurse
 		$Files | Foreach-Object {
-			Move-Item -Path "$($Extension_Destination)\$($_.Name)" -Destination "$($Extension_Destination)\$( $_.Name -Replace "template", $Name )"
+			Move-Item -Path $_.FullName -Destination "$($_.Directory.FullName)\$( $_.Name -Replace "template", $Name )"
 		}
 
 		# Replace variables in template files
-		$Files = Get-ChildItem -Path "$($Extension_Destination)"
+		$Files = Get-ChildItem -Path "$($Extension_Destination)" -File -Recurse
 
 		$Files | ForEach-Object {
 		
-			[String]$C = (Get-Content "$($Extension_Destination)\$($_.Name)" -Raw);
+			[String]$C = (Get-Content "$($Extension_Destination)\$($_.Name)" -Raw)
 		
 			# Parameters
-			$C = $C.replace('{{ ext_Name }}', $Name);
-			$C = $C.replace('{{ ext_Description }}', $Description);
-			$C = $C.replace('{{ ext_Label }}', $Label);
+			$C = $C.replace('{{ ext_Name }}', $Name)
+			$C = $C.replace('{{ ext_Description }}', $Description)
+			$C = $C.replace('{{ ext_Label }}', $Label)
 
 			# Defaults from variables
-			$C = $C.replace('{{ ext_Url }}', $EnvSettings.Extensions.Url);
-			$C = $C.replace('{{ ext_VersionDescription }}', $EnvSettings.Extensions.VersionDescription);
-			$C = $C.replace('{{ ext_VersionDataModel }}', $EnvSettings.Extensions.VersionDataModel);
-			$C = $C.replace('{{ ext_Author }}', $EnvSettings.Extensions.Author);
-			$C = $C.replace('{{ ext_Company }}', $EnvSettings.Extensions.Company);
-			$C = $C.replace('{{ ext_VersionMin }}', $EnvSettings.Extensions.VersionMin);
-			$C = $C.replace('{{ ext_Version }}', ($EnvSettings.Extensions.VersionMin -Replace "\.[0-9]+$","") + "." + $(Get-Date -Format "yyMMdd"));
+			$C = $C.replace('{{ ext_Url }}', $EnvSettings.Extensions.Url)
+			$C = $C.replace('{{ ext_VersionDescription }}', $EnvSettings.Extensions.VersionDescription)
+			$C = $C.replace('{{ ext_VersionDataModel }}', $EnvSettings.Extensions.VersionDataModel)
+			$C = $C.replace('{{ ext_Author }}', $EnvSettings.Extensions.Author)
+			$C = $C.replace('{{ ext_Company }}', $EnvSettings.Extensions.Company)
+			$C = $C.replace('{{ ext_VersionMin }}', $EnvSettings.Extensions.VersionMin)
+			$C = $C.replace('{{ ext_Version }}', ($EnvSettings.Extensions.VersionMin -Replace "\.[0-9]+$","") + "." + $(Get-Date -Format "yyMMdd"))
 			
-			$C = $C.replace('{{ ext_ReleaseDate }}', $(Get-Date -Format "yyyy-MM-dd"));
-			$C = $C.replace('{{ ext_Year }}', $(Get-Date -Format "yyyy"));
-			$C = $C.replace('{{ ext_TimeStamp }}', $(Get-Date -Format "yyyy-MM-dd HH:mm:ss") );
+			$C = $C.replace('{{ ext_ReleaseDate }}', $(Get-Date -Format "yyyy-MM-dd"))
+			$C = $C.replace('{{ ext_Year }}', $(Get-Date -Format "yyyy"))
+			$C = $C.replace('{{ ext_TimeStamp }}', $(Get-Date -Format "yyyy-MM-dd HH:mm:ss") )
 		
 			$C | Set-Content "$($Extension_Destination)\$($_.Name)"
 		}
@@ -339,12 +339,12 @@ Using module iTop.Environments
 		$Files | ForEach-Object {
 		
 			# Replace content within those files found above
-			[String]$C = (Get-Content "$($Path)\$($To)\$($_.Name)" -Raw);	
-			$C = $C.replace($From , $To ); 	
-			$C | Set-Content "$($Path)\$($To)\$($_.Name)"
+			[String]$content = (Get-Content "$($Path)\$($To)\$($_.Name)" -Raw)	
+			$content = $C.replace($From , $To ) 	
+			$content | Set-Content "$($Path)\$($To)\$($_.Name)"
 		
-			# Rename 
-			Move-Item -Path "$($Path)\$($To)\$($_.Name)" -Destination "$($Path)\$($To)\$($_.Name -Replace $($From),$($To) )"
+			# Rename files.
+			Move-Item -Path "$($_.Directory.FullName)\$($_.Name)" -Destination "$($_.Directory.FullName)\$($_.Name -Replace $($From),$($To) )"
 		
 		}
 
@@ -432,7 +432,7 @@ Using module iTop.Environments
 		$Files | Where-Object { $_.Name -like  "module.*.php" } | Foreach-Object {
 
 			$_.Name -match "^(.*)\.(.*)\.(.*)$" | Out-Null
-			$SModuleShortName = $Matches[2]; # magic
+			$SModuleShortName = $Matches[2] # magic
 			$Content = Get-Content $_.FullName
 			$Content = $Content -Replace "'$($SModuleShortName)\/(.*)',", "'$($SModuleShortName)/$($sVersionExtensions)',"
 			$Content | Set-Content $_.FullName
@@ -606,7 +606,7 @@ Using module iTop.Environments
 		$xmlNode | ForEach-Object {
 
 			if($Class -eq "" -or $_.id -eq $Class) {
-				$Results += ($_ | Select-Object -Property id, _created_in, _altered_in, _alteration, parent, properties, fields, presentation)
+				$Results += $_
 			}
 
 			if($_.class) {

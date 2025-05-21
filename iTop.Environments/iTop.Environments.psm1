@@ -134,6 +134,7 @@ Class iTopEnvironment : System.Management.Automation.IValidateSetValuesGenerator
 
 
 
+
 #region iTop environments
 
 
@@ -202,8 +203,8 @@ Class iTopEnvironment : System.Management.Automation.IValidateSetValuesGenerator
 
 			$FoundEnvironment = $Environments."$Environment"
 			
-			if($null -eq $FoundEnvironment) {
-				throw "Environment $($Environment) was not defined (case sensitive!)"
+			if($null -eq $FoundEnvironment -and $null -ne $Environment -and "" -ne $Environment) {
+				throw "Environment '$($Environment)' was not defined (case sensitive!)"
 			}
 
 			return $FoundEnvironment
