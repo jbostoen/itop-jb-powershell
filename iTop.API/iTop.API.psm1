@@ -1,4 +1,4 @@
-# copyright   Copyright (C) 2019-2024 Jeffrey Bostoen
+# copyright   Copyright (C) 2019-2025 Jeffrey Bostoen
 # license     https://www.gnu.org/licenses/gpl-3.0.en.html
 
 Using module iTop.Environments
@@ -34,52 +34,55 @@ function Invoke-iTopRestMethod {
 		    # $SecurePassword = ConvertTo-SecureString $EnvSettings.API.Password -AsPlainText -Force
 		    # $Credential = New-Object System.Management.Automation.PSCredential($EnvSettings.API.User, $SecurePassword)
 
+			$Headers = @{
+				"Cache-Control" = "no-cache"
+			}
+
+			$ArgData = @{
+				"version" = $EnvSettings.API.Version
+				"json_data" = (ConvertTo-JSON $JsonData -Depth 10)
+			}
+
             Switch -Regex ($EnvSettings.API.Url) {
+
                 "login_mode=url" {
 					
-					$ArgData = @{
-						"version" = $EnvSettings.API.Version;
-						"auth_user" = $EnvSettings.API.User;
-						"auth_pwd" = $EnvSettings.API.Password;
-						"json_data" = (ConvertTo-JSON $JsonData -Depth 10)
-					}
-
-                    $Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{"Cache-Control"="no-cache"}
+					$ArgData.auth_user = $EnvSettings.API.User
+					$ArgData.auth_pwd = $EnvSettings.API.Password
+					
                     break
                 }
+
                 "login_mode=basic" {
 					
-					$ArgData = @{
-						"version" = $EnvSettings.API.Version;
-						"json_data" = (ConvertTo-JSON $JsonData -Depth 10)
-					}
-
                     # Only in PowerShell 6 there seems to be support for -Authentication Basic
                     # For Basic Authentication:
                     $Base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $EnvSettings.API.User,$EnvSettings.API.Password)))
-                    $Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{
-						"Cache-Control"="no-cache";
-						"Authorization"=("Basic {0}" -f $Base64AuthInfo)
-					}
+					$Headers.Authorization = "Basic {0}" -f $Base64AuthInfo
+					
                     break
+
                 }
+
                 "login_mode=token" {
 					
-					$ArgData = @{
-						"version" = $EnvSettings.API.Version;
-						"json_data" = (ConvertTo-JSON $JsonData -Depth 10);
-					}
+					$Headers."Auth-Token" = $EnvSettings.API.Token
 
-                    $Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -Body $ArgData -Headers @{
-						"Cache-Control"="no-cache";
-						"Auth-Token"=$EnvSettings.API.Token
-					}
                     break
+
                 }
+
                 default {
+
                     throw "Currently only basic and URL login modes are supported. Please add the login_mode parameter to the URL $($EnvSettings.API.Url)"
+
                 }
             }
+
+			# By default, enable the certificate check.
+			$performCertCheck = $EnvSettings.API.SkipCertificateCheck -ne $false
+
+			Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -SkipCertificateCheck:$performCertCheck -Body $ArgData -Headers 
 
             return $Content
 

@@ -54,7 +54,7 @@ Here is a full example. Remove all comments (prefixed by //)!
 			// login_mode=token (iTop application token will be used)
 			"Url":  "http://127.0.0.1/itop/web/webservices/rest.php?login_mode=url",
 			// Version of the iTop API.
-			"Version":  "1.3",
+			"Version":  "1.4",
 			// Username and password for the iTop API user.
 			// Mind that for now, the module uses the configured URL to determine how to authenticate.
 			"User":  "admin",
@@ -64,7 +64,9 @@ Here is a full example. Remove all comments (prefixed by //)!
 			// Specify the default output. '*' means all attributes of the queried class, '*+' means all attributes of the object's class.
 			// For example, if tickets are queried, '*' would return all the attributes which are defined for the ticket class.
 			// However, tickets could include changes, incidents, user requests, ... . Those classes each have some unique attributes. '*+' would expose those attributes in the result.
-			"Output_Fields":  "*"
+			"Output_Fields":  "*",
+			// Whether to skip the SSL/TLS certificate validation of the iTop web server. Defaults to false.
+			"SkipCertificateCheck": false
 		},
 	
 	// This section below is only relevant when you want to use the iTop.Local PowerShell module 
@@ -116,8 +118,8 @@ Here is a full example. Remove all comments (prefixed by //)!
 		"Extensions": {
 		   "Path":  "C:\\xampp\\htdocs\\iTop\\web\\extensions", 
 		   "Url":  "https://jeffreybostoen.be",
-		   "VersionMin":  "2.7.0", 
-		   "VersionDataModel":  "1.7", 
+		   "VersionMin":  "3.2.0", 
+		   "VersionDataModel":  "3.2", 
 		   "Author":  "Jeffrey Bostoen", 
 		   "Company":  "Jeffrey Bostoen", 
 		   "VersionDescription":  "" 
