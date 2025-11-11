@@ -289,7 +289,7 @@ Using module iTop.Environments
 			$C = $C.replace('{{ ext_Year }}', $(Get-Date -Format "yyyy"))
 			$C = $C.replace('{{ ext_TimeStamp }}', $(Get-Date -Format "yyyy-MM-dd HH:mm:ss") )
 		
-			$C | Set-Content "$($Extension_Destination)\$($_.Name)"
+			$C | Set-Content $_.FullName
 		}
 
 		Write-Host "Created extension $($Name) from template in $Extension_Source"
