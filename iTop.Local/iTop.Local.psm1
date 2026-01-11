@@ -445,6 +445,7 @@ Using module iTop.Environments
 
 			$Content = Get-Content $_.FullName
 			$Content = $Content -Replace "^([\s]{0,})\* @version([\s]{1,}).*", "`${1}* @version`${2}$($sVersionExtensions)"
+			$Content = $Content -Replace "const MODULE_VERSION = '(.*?)';", "const MODULE_VERSION = '$($sVersionExtensions)';"
 			$Content = $Content -Replace "^([\s]{0,})\* @copyright([\s]{1,})Copyright \((C|c)\) (20[0-9]{2})(((\-| \- )20[0-9]{2})|).+?([A-Za-z0-9 \-]{1,})", "`${1}* @copyright`${2}Copyright (c) `${4}-$($(Get-Date).ToString("yyyy")) `${8}"
 			$Content = $Content -Replace "$($(Get-Date).ToString("yyyy"))-$($(Get-Date).ToString("yyyy"))", $(Get-Date).ToString("yyyy")
 			$Content | Set-Content $_.FullName
