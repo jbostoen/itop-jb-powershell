@@ -18,7 +18,7 @@ Using module iTop.Environments
 	 .Parameter Force
 	 Switch. Forces removal of .maintenance and .readonly files if present (which block new setup executions), unsets read-only flag of configuration file.
 	 
-	 .Example
+	 .Exampleset-itopetension
 	 Install-iTopUnattended
 
 	#>
@@ -401,7 +401,8 @@ Using module iTop.Environments
         }
 		
 		$sVersionTimeStamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-		$sVersionExtensions = $($EnvSettings.Extensions.VersionMin -Replace "\.[0-9]$", "") + '.' + (Get-Date -Format "yyMMdd")
+		$sVersionExtensions = "$($EnvSettings.Extensions.VersionMin -Replace '\.[0-9]$', '').$(Get-Date -Format "yyMMdd")"
+		$sYear = $(Get-Date).ToString("yyyy")
 		
 		# Either add code to do more proper filtering or just make sure it's only applied to a subset of extenions.
 		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse | Where-Object { $_.DirectoryName -notmatch '\\template$' }
@@ -409,7 +410,7 @@ Using module iTop.Environments
 		$Files | Where-Object { $_.Name -eq "datamodel.*.xml" } | Foreach-Object {
 
 			$Content = Get-Content $_.FullName
-			$Content = $Content -Replace '<itop_design xmlns:xsi="http:\/\/www\.w3\.org\/2001\/XMLSchema-instance" version="1.[0-9]"', "<itop_design xmlns:xsi=`"http://www.w3.org/2001/XMLSchema-instance`" version=`"$($EnvSettings.Extensions.VersionDataModel)`"" 
+			$Content = $Content -Replace '<itop_design xmlns:xsi="http:\/\/www\.w3\.org\/2001\/XMLSchema-instance" version="[0-9]\.[0-9]"', "<itop_design xmlns:xsi=`"http://www.w3.org/2001/XMLSchema-instance`" version=`"$($EnvSettings.Extensions.VersionDataModel)`"" 
 			$Content | Set-Content $_.FullName
 
 		}
@@ -434,20 +435,28 @@ Using module iTop.Environments
 			$_.Name -match "^(.*)\.(.*)\.(.*)$" | Out-Null
 			$SModuleShortName = $Matches[2] # magic
 			$Content = Get-Content $_.FullName
-			$Content = $Content -Replace "'$($SModuleShortName)\/(.*)',", "'$($SModuleShortName)/$($sVersionExtensions)',"
+			$Content = $Content -Replace "'$($SModuleShortName)\/(.*)',", `
+				"'$($SModuleShortName)/$($sVersionExtensions)',"
 			$Content | Set-Content $_.FullName
 
 		}
 
 
 		# Update any PHP or XML file
-		$Files | Where-Object { $_.Name -like "*.php" -Or $_.Name -like "*.xml" }| Foreach-Object {
+		$Files | Where-Object { $_.Name -match "\.(php|xml)$" } | Foreach-Object {
 
 			$Content = Get-Content $_.FullName
 			$Content = $Content -Replace "^([\s]{0,})\* @version([\s]{1,}).*", "`${1}* @version`${2}$($sVersionExtensions)"
+
 			$Content = $Content -Replace "const MODULE_VERSION = '(.*?)';", "const MODULE_VERSION = '$($sVersionExtensions)';"
-			$Content = $Content -Replace "^([\s]{0,})\* @copyright([\s]{1,})Copyright \((C|c)\) (20[0-9]{2})(((\-| \- )20[0-9]{2})|).+?([A-Za-z0-9 \-]{1,})", "`${1}* @copyright`${2}Copyright (c) `${4}-$($(Get-Date).ToString("yyyy")) `${8}"
-			$Content = $Content -Replace "$($(Get-Date).ToString("yyyy"))-$($(Get-Date).ToString("yyyy"))", $(Get-Date).ToString("yyyy")
+
+			$Content = $Content -Replace "^([\s]{0,})\* @copyright([\s]{1,})((20[0-9]{2})(?:\-| \- |)(20[0-9]{2}|))\s+?([A-Za-z0-9 \-]{1,})", "`${1}* @copyright`${2}Copyright (c) `${4}-$($sYear) `${8}" `
+				-Replace "$($sYear)-$($sYear)", `
+					$sYear
+
+			$Content = $Content -Replace "$($(Get-Date).ToString("yyyy"))-$($(Get-Date).ToString("yyyy"))", `
+				$(Get-Date).ToString("yyyy")`
+
 			$Content | Set-Content $_.FullName
 
 
@@ -465,10 +474,11 @@ Using module iTop.Environments
 		}
 		
 		# Update any PS1/PSM1 file
-		$Files | Where-Object { $_.Name -like "*.ps1" -or $_.Name -like "*.psm1" } | Foreach-Object {
+		$Files | Where-Object { $_.Name -match "\.(ps1|psm1)$" } | Foreach-Object {
 
 			$Content = Get-Content $_.FullName
-			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($sVersionTimeStamp)"			
+			$Content = $Content `
+				-Replace "^# version[\s]{1,}.*",  "# version     $($sVersionTimeStamp)"			
 			$Content | Set-Content $_.FullName
 		}
 
@@ -476,17 +486,22 @@ Using module iTop.Environments
 		$Files | Where-Object { $_.Name -like "*.sh" } | Foreach-Object {
 
 			$Content = Get-Content $_.FullName
-			$Content = $Content -Replace "^# version[\s]{1,}.*", "# version     $($sVersionTimeStamp)"			
+			$Content = $Content `
+				-Replace "^# version[\s]{1,}.*", "# version     $($sVersionTimeStamp)"			
 			$Content | Set-Content $_.FullName
 		}
 
 		# Update any MarkDown (.md) or Twig file
-		$Files | Where-Object { $_.Name -like "*.md" -or $_.Name -like "*.twig" } | Foreach-Object {
+		$Files | Where-Object { $_.Name -match "\.(md|twig)$" } | Foreach-Object {
 
 			$Content = Get-Content $_.FullName
-			$Content = $Content -Replace "Copyright \((C|c)\) (20[0-9]{2})((\-| \- )20[0-9]{2}).+?([A-Za-z0-9 \-]{1,})", "Copyright (c) `${2}-$($(Get-Date).ToString("yyyy")) `${5}"
-			$Content = $Content -Replace "Copyright \((C|c)\) (2019|202[\d]) (.+|)?([A-Za-z0-9 \-]{1,})", "Copyright (c) `${2}-$($(Get-Date).ToString("yyyy")) `${3}" # Don't match if after the year a new year is specified
-			$Content = $Content -Replace "$($(Get-Date).ToString("yyyy"))-$($(Get-Date).ToString("yyyy"))", $(Get-Date).ToString("yyyy")
+			# Formats: 
+			# Copyright (C) 2020 Jeffrey Bostoen
+			# Copyright (C) 2020-2023 Jeffrey Bostoen
+			$Content = $Content	`
+				-Replace "Copyright \((?:C|c)\) ((20[0-9]{2})(?:\-| \- |)(20[0-9]{2}|))\s+?([A-Za-z0-9 \-]{1,})",  "Copyright (c) `${2}-$($sYear) `${4}" `
+				-Replace "$($sYear)-$($sYear)",  $sYear
+
 			$Content | Set-Content $_.FullName
 		}
 
