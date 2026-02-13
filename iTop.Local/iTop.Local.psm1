@@ -450,9 +450,8 @@ Using module iTop.Environments
 
 			$Content = $Content -Replace "const MODULE_VERSION = '(.*?)';", "const MODULE_VERSION = '$($sVersionExtensions)';"
 
-			$Content = $Content -Replace "^([\s]{0,})\* @copyright([\s]{1,})((20[0-9]{2})(?:\-| \- |)(20[0-9]{2}|))\s+?([A-Za-z0-9 \-]{1,})", "`${1}* @copyright`${2}Copyright (c) `${4}-$($sYear) `${8}" `
-				-Replace "$($sYear)-$($sYear)", `
-					$sYear
+			$Content = $Content -Replace "^([\s]{0,})\* @copyright([\s]{1,})(?:Copyright \((?:C|c)\) )((20[0-9]{2})(?:\-| \- |)(20[0-9]{2}|))\s+?([A-Za-z0-9 \-]{1,})", "`${1}* @copyright`${2}Copyright (c) `${4}-$($sYear) `${6}" `
+				-Replace "$($sYear)-$($sYear)", $sYear
 
 			$Content = $Content -Replace "$($(Get-Date).ToString("yyyy"))-$($(Get-Date).ToString("yyyy"))", `
 				$(Get-Date).ToString("yyyy")`
