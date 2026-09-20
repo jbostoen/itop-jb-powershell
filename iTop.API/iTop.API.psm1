@@ -470,7 +470,7 @@ function Invoke-iTopRestMethod {
 			
 		}
 		# iTop API did return an error
-		elseif($Content.code -gt 0) {
+		else {
 			throw "iTop API returned an error: $($Content.code) - $($Content.message)"
 		}
 		 
