@@ -80,9 +80,9 @@ function Invoke-iTopRestMethod {
             }
 
 			# By default, enable the certificate check.
-			$performCertCheck = $EnvSettings.API.SkipCertificateCheck -ne $false
+			$skipCertCheck = $EnvSettings.API.SkipCertificateCheck -eq $true
 
-			$Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -SkipCertificateCheck:$performCertCheck -Body $ArgData -Headers $Headers
+			$Content = Invoke-RestMethod $EnvSettings.API.Url -Method "POST" -SkipCertificateCheck:$skipCertCheck -Body $ArgData -Headers $Headers
 
             return $Content
 
