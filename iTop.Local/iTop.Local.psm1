@@ -407,7 +407,7 @@ Using module iTop.Environments
 		# Either add code to do more proper filtering or just make sure it's only applied to a subset of extenions.
 		$Files = Get-ChildItem -Path $sExtensionPath -File -Recurse | Where-Object { $_.DirectoryName -notmatch '\\template$' }
 
-		$Files | Where-Object { $_.Name -eq "datamodel.*.xml" } | Foreach-Object {
+		$Files | Where-Object { $_.Name -like "datamodel.*.xml" } | Foreach-Object {
 
 			$Content = Get-Content $_.FullName
 			$Content = $Content -Replace '<itop_design xmlns:xsi="http:\/\/www\.w3\.org\/2001\/XMLSchema-instance" version="[0-9]\.[0-9]"', "<itop_design xmlns:xsi=`"http://www.w3.org/2001/XMLSchema-instance`" version=`"$($EnvSettings.Extensions.VersionDataModel)`"" 
