@@ -173,7 +173,7 @@ Using module iTop.Environments
 
 		# Exclude languages that must be kept
 		$KeepLanguages = $EnvSettings.App.Languages -Join "|"
-		$Regex = "^(" + $KeepLanguages + ").*\.(dict|dictionary)\.(.*?)\.php$"
+		$Regex = "^(" + $KeepLanguages + ")\.(dict|dictionary)\.(.*?)\.php$"
 		
 		$LanguageFiles_Remove = $LanguageFiles | Where-Object { 
 			($_.Name -notmatch $Regex)
