@@ -69,18 +69,18 @@ Using module iTop.Environments
 		
 		
 		If($Clean.IsPresent) {
-            $Cmd = "$($PhpExe) $($InstallScript) --response_file=$($InstallXML) --clean=1"
+            $CmdArgs = @($InstallScript, "--response_file=$($InstallXML)", "--clean=1")
 		}
         Else {
-            $Cmd = "$($PhpExe) $($InstallScript) --response_file=$($UpgradeXML)"
+            $CmdArgs = @($InstallScript, "--response_file=$($UpgradeXML)")
         }
-		
+
 		Write-Host "Start: $((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))"
 		Write-Host "Running PHP script for unattended installation..."
-		Write-Host "Command: $($Cmd)"
+		Write-Host "Command: $($PhpExe) $($CmdArgs -Join ' ')"
 		Write-Host "$('*' * 25)"
-		
-		PowerShell.exe -Command $Cmd
+
+		& $PhpExe @CmdArgs
 		
 		Set-Location -Path $OriginalDir
 		
