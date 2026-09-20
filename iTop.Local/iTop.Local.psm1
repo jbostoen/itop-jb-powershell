@@ -421,7 +421,7 @@ Using module iTop.Environments
 			
 			# General iTop extension release info
 			$Content = $Content -Replace "<version>.*<\/version>", "<version>$($sVersionExtensions)</version>" 
-			$Content = $Content -Replace "<company>.*<\/company>", "<company>$($SCompany)</company>" 
+			$Content = $Content -Replace "<company>.*<\/company>", "<company>$($EnvSettings.Extensions.Company)</company>"
 			$Content = $Content -Replace "<release_date>.*<\/release_date>", "<release_date>$(Get-Date -Format 'yyyy-MM-dd')</release_date>" 
 			$Content = $Content -Replace "<itop_version_min>.*<\/itop_version_min>", "<itop_version_min>$($EnvSettings.Extensions.VersionMin)</itop_version_min>"
 			
