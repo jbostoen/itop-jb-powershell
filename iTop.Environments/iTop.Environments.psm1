@@ -71,7 +71,7 @@ $Environments | ForEach-Object {
     # Previously, the environment name had to be compatible with values in a PowerShell enum.
     # For that reason, hyphens were not allowed.
 	# While this current filter below may still be too strict, it allows for basic names.
-    If($EnvName -notmatch "^[A-z][A-Za-z0-9_\-]{0,}$" -or $EnvName -eq "default") {
+    If($EnvName -notmatch "^[A-Za-z][A-Za-z0-9_\-]{0,}$" -or $EnvName -eq "default") {
         Write-Error "Invalid name for JSON file: $($EnvName)"
     }
 

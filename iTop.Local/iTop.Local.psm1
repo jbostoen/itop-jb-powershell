@@ -238,7 +238,7 @@ Using module iTop.Environments
 		
 		# Prevent issues with filename
 		# This may be more limiting than what Combodo allows
-		If( $Name -notmatch "^[A-z][A-z0-9\-]{1,}$" ) {
+		If( $Name -notmatch "^[A-Za-z][A-Za-z0-9\-]{1,}$" ) {
 			throw "The extension's name preferably starts with an alphabetical character. Furthermore, it preferably consists of alphanumerical characters or hyphens (-) only."
 		}
 
