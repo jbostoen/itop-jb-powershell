@@ -185,7 +185,7 @@ Using module iTop.Environments
 
 			# Just list
 			$LanguageFiles_Remove
-			Warning "Warning: performed simulation. Did NOT remove languages. Use -Confirm `$true"
+			Write-Warning "Warning: performed simulation. Did NOT remove languages. Use -Confirm `$true"
 
 		}
 		else {
