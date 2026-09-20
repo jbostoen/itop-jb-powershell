@@ -625,7 +625,7 @@ Using module iTop.Environments
 				$Results += $_
 			}
 
-			if($_.class) {
+			if($Recurse -and $_.class) {
 				$SubResults = Get-iTopClassFromNode -xmlNode $_.class -recurse $Recurse -class $Class
 				$Results = $Results + $SubResults
 			}
