@@ -340,7 +340,7 @@ Using module iTop.Environments
 		
 			# Replace content within those files found above
 			[String]$content = (Get-Content "$($Path)\$($To)\$($_.Name)" -Raw)	
-			$content = $C.replace($From , $To ) 	
+			$content = $content.replace($From , $To )
 			$content | Set-Content "$($Path)\$($To)\$($_.Name)"
 		
 			# Rename files.
