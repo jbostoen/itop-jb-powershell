@@ -66,7 +66,7 @@ function merge ($target, $source) {
 # Perform actions on several environments
 $Environments | ForEach-Object {
 
-	$EnvName = $_.Name -Replace ".json", ""
+	$EnvName = $_.Name -Replace "\.json$", ""
 
     # Previously, the environment name had to be compatible with values in a PowerShell enum.
     # For that reason, hyphens were not allowed.
