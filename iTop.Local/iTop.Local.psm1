@@ -395,7 +395,7 @@ Using module iTop.Environments
 
             $confirmation = Read-Host "Warning: no specific subfolder specified. If you are sure you want to continue, enter Y"
             if ($confirmation -ne "y") {
-                exit
+                Return
             }
 
         }
