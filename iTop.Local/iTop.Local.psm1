@@ -531,19 +531,19 @@ Using module iTop.Environments
 
 		$EnvSettings = Get-iTopEnvironment -Environment $Environment
 
-        $CLIArgs = "" +
-			" --auth_user=$($EnvSettings.Cron.User)" +
-			" --auth_pwd=$($EnvSettings.Cron.Password)" +
-			" --verbose=1"
+        $CLIArgs = @(
+			"--auth_user=$($EnvSettings.Cron.User)",
+			"--auth_pwd=$($EnvSettings.Cron.Password)",
+			"--verbose=1"
+		)
 
         If($null -ne $EnvSettings.Variables.Environment) {
-            $CLIArgs += " --switch_env=$($EnvSettings.Variables.Environment)"
+            $CLIArgs += "--switch_env=$($EnvSettings.Variables.Environment)"
         }
 
-		# c:\xampp\php\php.exe c:\xampp\htdocs\itop\web\webservices\cron.php --auth_user=admin --auth_pwd=admin --verbose=1
-		$Expression = "$($EnvSettings.PHP.Path) $($EnvSettings.App.Path)\webservices\cron.php" + $CLIArgs
-        Write-Host $Expression
-		Invoke-Expression $Expression
+		# c:\xampp\php\php.exe c:\xampp\htdocs\itop\web\webservices\cron.php --auth_user=admin --auth_pwd=**** --verbose=1
+        Write-Host "$($EnvSettings.PHP.Path) $($EnvSettings.App.Path)\webservices\cron.php --auth_user=$($EnvSettings.Cron.User) --auth_pwd=**** --verbose=1"
+		& $EnvSettings.PHP.Path "$($EnvSettings.App.Path)\webservices\cron.php" @CLIArgs
 		
 	}
 	
