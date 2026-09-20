@@ -10,8 +10,7 @@ If($PsISE) {
     $Environments = @()
     $Paths = @(
 		# PowerShell 5.x
-        "$($env:USERPROFILE)\OneDrive\Documents\WindowsPowerShell\Modules\iTop\environments", 
-        "$($env:USERPROFILE)\OneDrive\Documents\WindowsPowerShell\Modules\iTop\environments", 
+        "$($env:USERPROFILE)\OneDrive\Documents\WindowsPowerShell\Modules\iTop\environments",
         "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\iTop\environments",
 		# PowerShell 7.x
         "$($env:USERPROFILE)\OneDrive\Documents\PowerShell\Modules\iTop\environments", 
