@@ -81,7 +81,7 @@ $Environments | ForEach-Object {
     # Inheritance
     If($UnmodifiedSettings.PSObject.Properties.Name -contains "InheritFrom") {
 
-        $ParentJSON = Get-Content -Path "$($_.DirectoryName)\$($UnmodifiedSettings.InheritFrom).json"
+        $ParentJSON = Get-Content -Path "$($_.DirectoryName)\$($UnmodifiedSettings.InheritFrom).json" -Raw
         $ParentSettings = $ParentJSON | ConvertFrom-Json
         $FinalSettings = $ParentSettings
 
