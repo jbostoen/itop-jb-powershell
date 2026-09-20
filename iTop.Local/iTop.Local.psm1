@@ -156,10 +156,10 @@ Using module iTop.Environments
 	 Environment name
 	 
 	 .Example
-	 Remove-iTopLanguages
-	 
+	 Remove-iTopLanguage -Environment "SomeEnv"
+
 	 .Example
-	 Remove-iTopLanguages -KeepLanguages @("en", "nl") -confirm $true
+	 Remove-iTopLanguage -Environment "SomeEnv" -Confirm $true
 
 	#>
 		param(
